@@ -36,9 +36,9 @@
 <body>
     <h1>Firefighting Game</h1>
     <div class="toolbar">
-        <img src="bucket.png" alt="Bucket" id="bucket">
-        <img src="helicopter.png" alt="Helicopter" id="helicopter">
-        <img src="firefighter.png" alt="Firefighter" id="firefighter">
+        <img src="assets/bucket.png" alt="Bucket" id="bucket">
+        <img src="assets/helicopter.png" alt="Helicopter" id="helicopter">
+        <img src="assets/firefighter.png" alt="Firefighter" id="firefighter">
     </div>
     <div class="game-board" id="gameBoard">
         <!-- Trees will be dynamically added here -->
@@ -58,7 +58,7 @@
         function init() {
             for (let i = 0; i < 100; i++) {
                 const tree = document.createElement('img');
-                tree.src = 'tree.png';
+                tree.src = 'assets/tree.png';
                 tree.dataset.status = 'green';
                 tree.addEventListener('click', () => {
                     if (selectedTool && tree.dataset.status === 'burning') {
@@ -84,7 +84,7 @@
             const greenTrees = trees.filter(tree => tree.dataset.status === 'green');
             if (greenTrees.length > 0) {
                 const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
-                tree.src = 'burnedTree.png';
+                tree.src = 'assets/burnedTree.png';
                 tree.dataset.status = 'burning';
             }
         }
@@ -92,14 +92,14 @@
         function useTool(tree) {
             if (selectedTool.uses > 0) {
                 selectedTool.uses--;
-                tree.src = 'tree.png';
+                tree.src = 'assets/tree.png';
                 tree.dataset.status = 'green';
                 if (selectedTool === tools.helicopter) {
                     for (let i = 0; i < 10; i++) {
                         const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
                         if (burningTrees.length > 0) {
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
-                            randomTree.src = 'tree.png';
+                            randomTree.src = 'assets/tree.png';
                             randomTree.dataset.status = 'green';
                         }
                     }
@@ -109,7 +109,7 @@
                         const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
                         if (burningTrees.length > 0) {
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
-                            randomTree.src = 'tree.png';
+                            randomTree.src = 'assets/tree.png';
                             randomTree.dataset.status = 'green';
                         }
                     }
