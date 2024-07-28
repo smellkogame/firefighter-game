@@ -388,6 +388,9 @@
                 updateBudget();
                 updateBudgetTooltip();
                 message.textContent = 'Куплены семена';
+                setTimeout(() => {
+                    message.textContent = '';
+                }, 2000);
             } else if (item === 'helicopterOrder' && budget >= 15000) {
                 budget -= 15000;
                 totalSpent += 15000;
@@ -396,6 +399,9 @@
                 updateBudget();
                 updateBudgetTooltip();
                 message.textContent = 'Заказан вертолет';
+                setTimeout(() => {
+                    message.textContent = '';
+                }, 2000);
             } else if (item === 'firefighter' && budget >= 500) {
                 budget -= 500;
                 totalSpent += 500;
@@ -404,6 +410,9 @@
                 updateBudget();
                 updateBudgetTooltip();
                 message.textContent = 'Нанят пожарный';
+                setTimeout(() => {
+                    message.textContent = '';
+                }, 2000);
             }
         }
 
@@ -411,6 +420,9 @@
             tool.element.addEventListener('click', () => {
                 selectedTool = tool;
                 message.textContent = tool.message;
+                setTimeout(() => {
+                    message.textContent = '';
+                }, 2000);
             });
         });
 
