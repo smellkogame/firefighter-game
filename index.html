@@ -6,11 +6,46 @@
     <title>Firefighting Game</title>
     <style>
         body {
-            background-color: black;
-            color: white;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin: 20px 0;
+            font-size: 2em;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .toolbar .tool {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .toolbar .tool:hover {
+            transform: scale(1.1);
+        }
+        .toolbar img {
+            width: 50px;
+            height: 50px;
+        }
+        .toolbar .count {
+            margin-top: 5px;
+            font-size: 1.2em;
+        }
+        .message {
+            margin: 10px 0;
+            font-size: 1.5em;
         }
         .game-board {
             display: grid;
@@ -18,39 +53,39 @@
             grid-template-rows: repeat(10, 50px);
             gap: 5px;
         }
+        .game-board .tree-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
         .game-board img {
             width: 50px;
             height: 50px;
-            position: relative;
-        }
-        .toolbar {
-            margin: 20px 0;
-        }
-        .toolbar img {
-            width: 50px;
-            height: 50px;
-            margin: 0 10px;
-            cursor: pointer;
-        }
-        .message {
-            margin: 10px 0;
-            font-size: 18px;
-        }
-        .fire {
             position: absolute;
-            width: 50px;
-            height: 50px;
             top: 0;
             left: 0;
+            transition: opacity 0.3s;
+        }
+        .game-board .fire {
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-    <h1>Спаси лес от пожара!</h1>
+    <h1>Firefighting Game</h1>
     <div class="toolbar">
-        <img src="assets/bucket.png" alt="Bucket" id="bucket">
-        <img src="assets/helicopter.png" alt="Helicopter" id="helicopter">
-        <img src="assets/firefighter.png" alt="Firefighter" id="firefighter">
+        <div class="tool" id="bucket">
+            <img src="assets/bucket.png" alt="Bucket">
+            <div class="count" id="bucketCount">30</div>
+        </div>
+        <div class="tool" id="helicopter">
+            <img src="assets/helicopter.png" alt="Helicopter">
+            <div class="count" id="helicopterCount">3</div>
+        </div>
+        <div class="tool" id="firefighter">
+            <img src="assets/firefighter.png" alt="Firefighter">
+            <div class="count" id="firefighterCount">10</div>
+        </div>
     </div>
     <div class="message" id="message">Выберите инструмент</div>
     <div class="game-board" id="gameBoard">
@@ -61,9 +96,9 @@
         const gameBoard = document.getElementById('gameBoard');
         const message = document.getElementById('message');
         const tools = {
-            bucket: { element: document.getElementById('bucket'), uses: 30, cooldown: 20000, message: 'Выбрано ведро с водой' },
-            helicopter: { element: document.getElementById('helicopter'), uses: 3, cooldown: 60000, message: 'Выбран вертолет' },
-            firefighter: { element: document.getElementById('firefighter'), uses: 10, cooldown: 50000, message: 'Выбран пожарный' }
+            bucket: { element: document.getElementById('bucket'), countElement: document.getElementById('bucketCount'), uses: 30, cooldown: 20000, message: 'Выбрано ведро с водой' },
+            helicopter: { element: document.getElementById('helicopter'), countElement: document.getElementById('helicopterCount'), uses: 3, cooldown: 60000, message: 'Выбран вертолет' },
+            firefighter: { element: document.getElementById('firefighter'), countElement: document.getElementById('firefighterCount'), uses: 10, cooldown: 50000, message: 'Выбран пожарный' }
         };
 
         let selectedTool = null;
@@ -72,7 +107,7 @@
         function init() {
             for (let i = 0; i < 100; i++) {
                 const treeContainer = document.createElement('div');
-                treeContainer.style.position = 'relative';
+                treeContainer.className = 'tree-container';
                 const tree = document.createElement('img');
                 tree.src = 'assets/tree.png';
                 tree.dataset.status = 'green';
@@ -85,8 +120,8 @@
                 fire.src = 'assets/fire.png';
                 fire.className = 'fire';
                 fire.style.display = 'none';
-                treeContainer.appendChild(tree);
                 treeContainer.appendChild(fire);
+                treeContainer.appendChild(tree);
                 trees.push(tree);
                 gameBoard.appendChild(treeContainer);
             }
@@ -107,26 +142,24 @@
             const greenTrees = trees.filter(tree => tree.dataset.status === 'green');
             if (greenTrees.length > 0) {
                 const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
-                tree.src = 'assets/burnedTree.png';
                 tree.dataset.status = 'burning';
-                tree.nextSibling.style.display = 'block'; // Показать огонь
+                tree.previousSibling.style.display = 'block'; // Показать огонь
             }
         }
 
         function useTool(tree) {
             if (selectedTool.uses > 0) {
                 selectedTool.uses--;
-                tree.src = 'assets/tree.png';
+                selectedTool.countElement.textContent = selectedTool.uses;
                 tree.dataset.status = 'green';
-                tree.nextSibling.style.display = 'none'; // Скрыть огонь
+                tree.previousSibling.style.display = 'none'; // Скрыть огонь
                 if (selectedTool === tools.helicopter) {
                     for (let i = 0; i < 10; i++) {
                         const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
                         if (burningTrees.length > 0) {
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
-                            randomTree.src = 'assets/tree.png';
                             randomTree.dataset.status = 'green';
-                            randomTree.nextSibling.style.display = 'none'; // Скрыть огонь
+                            randomTree.previousSibling.style.display = 'none'; // Скрыть огонь
                         }
                     }
                 }
@@ -135,9 +168,8 @@
                         const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
                         if (burningTrees.length > 0) {
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
-                            randomTree.src = 'assets/tree.png';
                             randomTree.dataset.status = 'green';
-                            randomTree.nextSibling.style.display = 'none'; // Скрыть огонь
+                            randomTree.previousSibling.style.display = 'none'; // Скрыть огонь
                         }
                     }
                 }
@@ -147,6 +179,7 @@
                     setTimeout(() => {
                         selectedTool.uses = selectedTool === tools.bucket ? 30 :
                                             selectedTool === tools.helicopter ? 3 : 10;
+                        selectedTool.countElement.textContent = selectedTool.uses;
                         selectedTool.element.classList.remove('cooldown');
                     }, selectedTool.cooldown);
                 }
