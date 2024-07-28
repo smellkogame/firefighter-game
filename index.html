@@ -3,10 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firefighter Game</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.54.0/dist/phaser.js"></script>
-    <script src="main.js"></script>
+    <title>Firefighting Game</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            gap: 5px;
+        }
+        .game-board img {
+            width: 50px;
+            height: 50px;
+        }
+        .toolbar {
+            margin: 20px 0;
+        }
+        .toolbar img {
+            width: 50px;
+            height: 50px;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
+    <h1>Firefighting Game</h1>
+    <div class="toolbar">
+        <img src="bucket.png" alt="Bucket" id="bucket">
+        <img src="helicopter.png" alt="Helicopter" id="helicopter">
+        <img src="firefighter.png" alt="Firefighter" id="firefighter">
+    </div>
+    <div class="game-board" id="gameBoard">
+        <!-- Trees will be dynamically added here -->
+    </div>
+
+    <script>
+        const gameBoard = document.getElementById('gameBoard');
+        const tools = {
+            bucket: { element: document.getElementById('bucket'), uses: 30, cooldown: 20000 },
+            helicopter: { element: document.getElementById('helicopter'), uses: 3, cooldown: 60000 },
+            firefighter: { element: document.getElementById('firefighter'), uses: 10, cooldown: 50000 }
+        };
+
+        let selectedTool = null;
+        let trees = [];
+
+        function init() {
+            for (let i = 0; i < 100; i++) {
+                const tree = document.createElement('img');
+                tree.src = 'tree.png';
+                tree.dataset.status = 'green';
+                tree.addEventListener('click', () => {
+                    if (selectedTool && tree.dataset.status === 'burning') {
+                        useTool(tree);
+                    }
+                });
+                trees.push(tree);
+                gameBoard.appendChild(tree);
+            }
+
+            setInterval(startFire, 3000);
+
+            Object.values(tools).forEach(tool => {
+                tool.element.addEventListener('click', () => {
+                    if (!tool.element.classList.contains('cooldown')) {
+                        selectedTool = tool;
+                    }
+                });
+            });
+        }
+
+        function startFire() {
+            const greenTrees = trees.filter(tree => tree.dataset.status === 'green');
+            if (greenTrees.length > 0) {
+                const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
+                tree.src = 'burnedTree.png';
+                tree.dataset.status = 'burning';
+            }
+        }
+
+        function useTool(tree) {
+            if (selectedTool.uses > 0) {
+                selectedTool.uses--;
+                tree.src = 'tree.png';
+                tree.dataset.status = 'green';
+                if (selectedTool === tools.helicopter) {
+                    for (let i = 0; i < 10; i++) {
+                        const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
+                        if (burningTrees.length > 0) {
+                            const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
+                            randomTree.src = 'tree.png';
+                            randomTree.dataset.status = 'green';
+                        }
+                    }
+                }
+                if (selectedTool === tools.firefighter) {
+                    for (let i = 0; i < 2; i++) {
+                        const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
+                        if (burningTrees.length > 0) {
+                            const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
+                            randomTree.src = 'tree.png';
+                            randomTree.dataset.status = 'green';
+                        }
+                    }
+                }
+
+                if (selectedTool.uses === 0) {
+                    selectedTool.element.classList.add('cooldown');
+                    setTimeout(() => {
+                        selectedTool.uses = selectedTool === tools.bucket ? 30 :
+                                            selectedTool === tools.helicopter ? 3 : 10;
+                        selectedTool.element.classList.remove('cooldown');
+                    }, selectedTool.cooldown);
+                }
+            }
+        }
+
+        init();
+    </script>
 </body>
 </html>
