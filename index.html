@@ -19,12 +19,12 @@
             margin: 20px 0;
             font-size: 2em;
         }
-        .toolbar {
+        .toolbar, .status-bar {
             display: flex;
             justify-content: center;
             margin: 20px 0;
         }
-        .toolbar .tool {
+        .toolbar .tool, .shop {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -33,14 +33,14 @@
             transition: transform 0.3s;
             position: relative;
         }
-        .toolbar .tool:hover {
+        .toolbar .tool:hover, .shop:hover {
             transform: scale(1.1);
         }
-        .toolbar .tool img {
+        .toolbar .tool img, .shop img {
             width: 50px;
             height: 50px;
         }
-        .toolbar .count {
+        .toolbar .count, .budget, .level-time, .fire-class {
             margin-top: 5px;
             font-size: 1.2em;
         }
@@ -55,7 +55,7 @@
             transition: opacity 0.3s;
             white-space: nowrap;
         }
-        .toolbar .tool:hover .tooltip {
+        .toolbar .tool:hover .tooltip, .shop:hover .tooltip {
             opacity: 1;
         }
         .message {
@@ -85,16 +85,43 @@
             z-index: 10;
             pointer-events: none;
         }
+        .shop-items {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background-color: #fff;
+            border: 1px solid #333;
+            padding: 10px;
+            z-index: 100;
+        }
+        .shop-items div {
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .shop-items div:hover {
+            background-color: #f0f0f0;
+        }
+        .fire-class-1 { background-color: #d4edda; }
+        .fire-class-2 { background-color: #fff3cd; }
+        .fire-class-3 { background-color: #ffeeba; }
+        .fire-class-4 { background-color: #f8d7da; }
+        .fire-class-5 { background-color: #f5c6cb; }
+        .fire-class-5 .game-board { animation: flash 1s infinite; }
+        @keyframes flash {
+            0%, 100% { background-color: #f5c6cb; }
+            50% { background-color: #f8d7da; }
+        }
     </style>
 </head>
 <body>
     <h1>Firefighting Game</h1>
+    <div class="status-bar">
+        <div class="budget">Бюджет: <span id="budget">100000</span></div>
+        <div class="level-time">Время уровня: <span id="levelTime">5:00</span></div>
+        <div class="fire-class">Класс пожарной опасности: <span id="fireClass">1</span></div>
+    </div>
     <div class="toolbar">
-        <div class="tool" id="bucket">
-            <img src="assets/bucket.png" alt="Bucket">
-            <div class="count" id="bucketCount">30</div>
-            <div class="tooltip">Ведро с водой: тушит один очаг пожара</div>
-        </div>
         <div class="tool" id="helicopter">
             <img src="assets/helicopter.png" alt="Helicopter">
             <div class="count" id="helicopterCount">3</div>
@@ -102,8 +129,16 @@
         </div>
         <div class="tool" id="firefighter">
             <img src="assets/firefighter.png" alt="Firefighter">
-            <div class="count" id="firefighterCount">10</div>
+            <div class="count" id="firefighterCount">20</div>
             <div class="tooltip">Пожарный: тушит до 2 очагов пожара</div>
+        </div>
+        <div class="shop">
+            <img src="assets/shop.png" alt="Shop">
+            <div class="tooltip">Магазин</div>
+            <div class="shop-items" id="shopItems">
+                <div data-item="seeds">Семена - 500</div>
+                <div data-item="helicopterOrder">Заказ вертолета - 20000</div>
+            </div>
         </div>
     </div>
     <div class="message" id="message">Выберите инструмент</div>
@@ -114,14 +149,21 @@
     <script>
         const gameBoard = document.getElementById('gameBoard');
         const message = document.getElementById('message');
+        const budgetElement = document.getElementById('budget');
+        const levelTimeElement = document.getElementById('levelTime');
+        const fireClassElement = document.getElementById('fireClass');
+        const shopItems = document.getElementById('shopItems');
         const tools = {
-            bucket: { element: document.getElementById('bucket'), countElement: document.getElementById('bucketCount'), uses: 30, cooldown: 20000, message: 'Выбрано ведро с водой' },
             helicopter: { element: document.getElementById('helicopter'), countElement: document.getElementById('helicopterCount'), uses: 3, cooldown: 60000, message: 'Выбран вертолет' },
-            firefighter: { element: document.getElementById('firefighter'), countElement: document.getElementById('firefighterCount'), uses: 10, cooldown: 50000, message: 'Выбран пожарный' }
+            firefighter: { element: document.getElementById('firefighter'), countElement: document.getElementById('firefighterCount'), uses: 20, cooldown: 50000, message: 'Выбран пожарный' }
         };
-
         let selectedTool = null;
         let trees = [];
+        let budget = 100000;
+        let level = 1;
+        let levelTime = 300;
+        let fireClass = 1;
+        let firesExtinguished = 0;
 
         function init() {
             for (let i = 0; i < 100; i++) {
@@ -146,6 +188,8 @@
             }
 
             setInterval(startFire, 3000);
+            setInterval(updateLevelTime, 1000);
+            updateFireClass();
 
             Object.values(tools).forEach(tool => {
                 tool.element.addEventListener('click', () => {
@@ -155,14 +199,34 @@
                     }
                 });
             });
+
+            document.querySelector('.shop').addEventListener('click', () => {
+                shopItems.style.display = shopItems.style.display === 'block' ? 'none' : 'block';
+            });
+
+            shopItems.addEventListener('click', (event) => {
+                const item = event.target.dataset.item;
+                if (item === 'seeds' && budget >= 500) {
+                    budget -= 500;
+                    budgetElement.textContent = budget;
+                    // Handle seeds purchase (e.g., planting new trees)
+                } else if (item === 'helicopterOrder' && budget >= 20000) {
+                    budget -= 20000;
+                    budgetElement.textContent = budget;
+                    tools.helicopter.uses++;
+                    tools.helicopter.countElement.textContent = tools.helicopter.uses;
+                }
+            });
         }
 
         function startFire() {
             const greenTrees = trees.filter(tree => tree.dataset.status === 'green');
             if (greenTrees.length > 0) {
-                const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
-                tree.dataset.status = 'burning';
-                tree.previousSibling.style.display = 'block'; // Показать огонь
+                for (let i = 0; i < fireClass * 2; i++) {
+                    const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
+                    tree.dataset.status = 'burning';
+                    tree.previousSibling.style.display = 'block'; // Показать огонь
+                }
             }
         }
 
@@ -173,25 +237,16 @@
                 tree.dataset.status = 'burned';
                 tree.src = 'assets/burnedTree.png';
                 tree.previousSibling.style.display = 'none'; // Скрыть огонь
+                firesExtinguished++;
                 if (selectedTool === tools.helicopter) {
-                    for (let i = 0; i < 10; i++) {
+                    for (let i = 0; i < 9; i++) {
                         const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
                         if (burningTrees.length > 0) {
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
                             randomTree.dataset.status = 'burned';
                             randomTree.src = 'assets/burnedTree.png';
                             randomTree.previousSibling.style.display = 'none'; // Скрыть огонь
-                        }
-                    }
-                }
-                if (selectedTool === tools.firefighter) {
-                    for (let i = 0; i < 2; i++) {
-                        const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
-                        if (burningTrees.length > 0) {
-                            const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
-                            randomTree.dataset.status = 'burned';
-                            randomTree.src = 'assets/burnedTree.png';
-                            randomTree.previousSibling.style.display = 'none'; // Скрыть огонь
+                            firesExtinguished++;
                         }
                     }
                 }
@@ -199,13 +254,34 @@
                 if (selectedTool.uses === 0) {
                     selectedTool.element.classList.add('cooldown');
                     setTimeout(() => {
-                        selectedTool.uses = selectedTool === tools.bucket ? 30 :
-                                            selectedTool === tools.helicopter ? 3 : 10;
+                        selectedTool.uses = selectedTool === tools.helicopter ? 3 : 20;
                         selectedTool.countElement.textContent = selectedTool.uses;
                         selectedTool.element.classList.remove('cooldown');
                     }, selectedTool.cooldown);
                 }
             }
+        }
+
+        function updateLevelTime() {
+            levelTime--;
+            if (levelTime <= 0) {
+                budget += firesExtinguished * 1000;
+                budgetElement.textContent = budget;
+                firesExtinguished = 0;
+                level++;
+                levelTime = 300 + level * 60;
+            }
+            const minutes = Math.floor(levelTime / 60);
+            const seconds = levelTime % 60;
+            levelTimeElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        function updateFireClass() {
+            setInterval(() => {
+                fireClass = Math.floor(Math.random() * 5) + 1;
+                fireClassElement.textContent = fireClass;
+                document.body.className = `fire-class-${fireClass}`;
+            }, 5000);
         }
 
         init();
