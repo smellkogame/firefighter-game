@@ -392,9 +392,8 @@
         function updateLevelTime() {
             levelTime--;
             if (levelTime <= 0) {
-                level++;
-                levelTime = 60 + level * 30;
-                fireClass = level;
+                levelTime = 60 + (fireClass * 30);
+                fireClass++;
                 fireClassElement.textContent = fireClass;
                 document.body.className = `fire-class-${fireClass}`;
             }
