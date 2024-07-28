@@ -21,6 +21,7 @@
         .game-board img {
             width: 50px;
             height: 50px;
+            position: relative;
         }
         .toolbar {
             margin: 20px 0;
@@ -31,6 +32,17 @@
             margin: 0 10px;
             cursor: pointer;
         }
+        .message {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .fire {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 0;
+            left: 0;
+        }
     </style>
 </head>
 <body>
@@ -40,16 +52,18 @@
         <img src="assets/helicopter.png" alt="Helicopter" id="helicopter">
         <img src="assets/firefighter.png" alt="Firefighter" id="firefighter">
     </div>
+    <div class="message" id="message">Выберите инструмент</div>
     <div class="game-board" id="gameBoard">
         <!-- Trees will be dynamically added here -->
     </div>
 
     <script>
         const gameBoard = document.getElementById('gameBoard');
+        const message = document.getElementById('message');
         const tools = {
-            bucket: { element: document.getElementById('bucket'), uses: 30, cooldown: 20000 },
-            helicopter: { element: document.getElementById('helicopter'), uses: 3, cooldown: 60000 },
-            firefighter: { element: document.getElementById('firefighter'), uses: 10, cooldown: 50000 }
+            bucket: { element: document.getElementById('bucket'), uses: 30, cooldown: 20000, message: 'Выбрано ведро с водой' },
+            helicopter: { element: document.getElementById('helicopter'), uses: 3, cooldown: 60000, message: 'Выбран вертолет' },
+            firefighter: { element: document.getElementById('firefighter'), uses: 10, cooldown: 50000, message: 'Выбран пожарный' }
         };
 
         let selectedTool = null;
@@ -57,6 +71,8 @@
 
         function init() {
             for (let i = 0; i < 100; i++) {
+                const treeContainer = document.createElement('div');
+                treeContainer.style.position = 'relative';
                 const tree = document.createElement('img');
                 tree.src = 'assets/tree.png';
                 tree.dataset.status = 'green';
@@ -65,8 +81,14 @@
                         useTool(tree);
                     }
                 });
+                const fire = document.createElement('img');
+                fire.src = 'assets/fire.png';
+                fire.className = 'fire';
+                fire.style.display = 'none';
+                treeContainer.appendChild(tree);
+                treeContainer.appendChild(fire);
                 trees.push(tree);
-                gameBoard.appendChild(tree);
+                gameBoard.appendChild(treeContainer);
             }
 
             setInterval(startFire, 3000);
@@ -75,6 +97,7 @@
                 tool.element.addEventListener('click', () => {
                     if (!tool.element.classList.contains('cooldown')) {
                         selectedTool = tool;
+                        message.textContent = tool.message;
                     }
                 });
             });
@@ -86,6 +109,7 @@
                 const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
                 tree.src = 'assets/burnedTree.png';
                 tree.dataset.status = 'burning';
+                tree.nextSibling.style.display = 'block'; // Показать огонь
             }
         }
 
@@ -94,6 +118,7 @@
                 selectedTool.uses--;
                 tree.src = 'assets/tree.png';
                 tree.dataset.status = 'green';
+                tree.nextSibling.style.display = 'none'; // Скрыть огонь
                 if (selectedTool === tools.helicopter) {
                     for (let i = 0; i < 10; i++) {
                         const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
@@ -101,6 +126,7 @@
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
                             randomTree.src = 'assets/tree.png';
                             randomTree.dataset.status = 'green';
+                            randomTree.nextSibling.style.display = 'none'; // Скрыть огонь
                         }
                     }
                 }
@@ -111,6 +137,7 @@
                             const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
                             randomTree.src = 'assets/tree.png';
                             randomTree.dataset.status = 'green';
+                            randomTree.nextSibling.style.display = 'none'; // Скрыть огонь
                         }
                     }
                 }
