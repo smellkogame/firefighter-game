@@ -1,500 +1,3324 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Зеленое пламя - не дай всем деревьям сгореть!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DarinaScapes 3D: Уют в Нерюнгри</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #fff;
-            color: #333;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        html, body {
             margin: 0;
             padding: 0;
-        }
-        h1 {
-            margin: 20px 0;
-            font-size: 2.5em;
-            text-align: center;
-            color: #1e6091;
-        }
-        .status-bar {
-            display: flex;
-            justify-content: space-around;
             width: 100%;
-            margin: 20px 0;
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
+            font-family: 'Nunito', sans-serif;
+            background: #070d19;
+            touch-action: none;
         }
-        .status-item {
-            font-size: 1.2em;
-            background: linear-gradient(145deg, #e0e0e0, #f8f9fa);
-            box-shadow: 5px 5px 10px #d1d1d1,
-                        -5px -5px 10px #ffffff;
-            padding: 10px;
-            border-radius: 10px;
-            position: relative;
-        }
-        .status-item:hover .tooltip {
-            opacity: 1;
-        }
-        .status-item .tooltip {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            white-space: nowrap;
-        }
-        .toolbar {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            position: relative;
-        }
-        .toolbar .tool {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 15px;
-            cursor: pointer;
-            transition: transform 0.3s;
-            position: relative;
-        }
-        .toolbar .tool:hover {
-            transform: scale(1.1);
-        }
-        .toolbar .tool img {
-            width: 50px;
-            height: 50px;
-        }
-        .toolbar .count {
-            margin-top: 5px;
-            font-size: 1.2em;
-        }
-        .toolbar .tooltip {
-            position: absolute;
-            bottom: 70px;
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            white-space: nowrap;
-        }
-        .toolbar .tool:hover .tooltip {
-            opacity: 1;
-        }
-        .shop {
-            position: absolute;
-            right: 0;
-            top: 20px;
-            cursor: pointer;
-        }
-        .shop img {
-            width: 50px;
-            height: 50px;
-        }
-        .shop .tooltip {
-            position: absolute;
-            bottom: 70px;
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            white-space: nowrap;
-        }
-        .shop:hover .tooltip {
-            opacity: 1;
-        }
-        .shop-items {
-            display: none;
-            position: absolute;
-            top: 60px;
-            right: 0;
-            background-color: #fff;
-            border: 1px solid #333;
-            padding: 10px;
-            z-index: 100;
-            width: 200px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-        }
-        .shop-items div {
-            margin-bottom: 10px;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 5px;
-            transition: background-color 0.3s, transform 0.3s;
-        }
-        .shop-items div:hover {
-            background-color: #f0f0f0;
-            transform: scale(1.05);
-        }
-        .message {
-            margin: 10px 0;
-            font-size: 1.5em;
-            color: #1e6091;
-        }
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(15, 50px);
-            grid-template-rows: repeat(10, 50px);
-            gap: 5px;
-        }
-        .game-board .tree-container {
-            position: relative;
-            width: 50px;
-            height: 50px;
-        }
-        .game-board img {
-            width: 50px;
-            height: 50px;
-            position: absolute;
+
+        /* Auto-Landscape Shell for Mobile */
+        #app-shell {
+            position: fixed;
             top: 0;
             left: 0;
-            transition: opacity 0.3s;
+            width: 100vw;
+            height: 100vh;
+            width: 100dvw;
+            height: 100dvh;
+            overflow: hidden;
+            background: #070d19;
+            transform-origin: top left;
         }
-        .game-board .fire {
-            z-index: 10;
+        @media (orientation: portrait) {
+            #app-shell {
+                width: 100vh;
+                height: 100vw;
+                width: 100dvh;
+                height: 100dvw;
+                transform: rotate(90deg) translateY(-100%);
+            }
+        }
+
+        /* Glossy Homescapes Buttons */
+        .hs-btn-green {
+            background: linear-gradient(180deg, #4ade80 0%, #16a34a 55%, #15803d 100%);
+            border: 2.5px solid #bbf7d0;
+            box-shadow: 0 4px 0 #14532d, 0 6px 14px rgba(0,0,0,0.45);
+            transition: transform 0.1s;
+        }
+        .hs-btn-green:active { transform: translateY(3px); box-shadow: 0 1px 0 #14532d; }
+
+        .hs-btn-amber {
+            background: linear-gradient(180deg, #fde047 0%, #eab308 55%, #ca8a04 100%);
+            border: 2.5px solid #fef9c3;
+            box-shadow: 0 4px 0 #854d0e, 0 6px 14px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        .hs-btn-amber:active { transform: translateY(3px); box-shadow: 0 1px 0 #854d0e; }
+
+        .hs-btn-blue {
+            background: linear-gradient(180deg, #60a5fa 0%, #2563eb 60%, #1d4ed8 100%);
+            border: 2px solid #dbeafe;
+            box-shadow: 0 4px 0 #1e3a8a, 0 6px 14px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+        .hs-btn-blue:active { transform: translateY(3px); box-shadow: 0 1px 0 #1e3a8a; }
+
+        .hs-pill {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+        }
+
+        @keyframes pulsePin {
+            0%, 100% { transform: translate(-50%, -100%) translateY(0) scale(1); }
+            50% { transform: translate(-50%, -100%) translateY(-5px) scale(1.06); }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.84); opacity: 0; }
+            70% { transform: scale(1.04); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes tileDropIn {
+            0% { transform: translateY(-26px) scale(0.85); opacity: 0.3; }
+            75% { transform: translateY(3px) scale(1.03); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .pin-3d {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            animation: pulsePin 2.1s ease-in-out infinite;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 15;
+        }
+        .actor-bubble-3d {
+            position: absolute;
+            transform: translate(-50%, -100%);
             pointer-events: none;
+            z-index: 20;
+            transition: opacity 0.25s;
         }
-        .fire-class-1 { background-color: #d0ebff; }
-        .fire-class-2 { background-color: #d4edda; }
-        .fire-class-3 { background-color: #fff3cd; }
-        .fire-class-4 { background-color: #ffe8cc; }
-        .fire-class-5 { background-color: #f8d7da; }
-        .fire-class-5 .game-board { animation: flash 1s infinite; }
-        @keyframes flash {
-            0%, 100% { background-color: #f5c6cb; }
-            50% { background-color: #f8d7da; }
+        .furn-pop { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .tile-drop { animation: tileDropIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+        /* Horizontal Match-3 Responsive Board */
+        .m3-board-wrap {
+            width: min(74vh, 52vw);
+            height: min(74vh, 52vw);
+            max-width: 410px;
+            max-height: 410px;
+            aspect-ratio: 1 / 1;
         }
-        .sidebar {
-            position: fixed;
-            right: -250px;
-            top: 0;
-            width: 250px;
+        @media (orientation: portrait) {
+            .m3-board-wrap {
+                width: min(74vw, 52vh);
+                height: min(74vw, 52vh);
+            }
+        }
+        #match3-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 4px;
+            width: 100%;
             height: 100%;
-            background-color: #f8f9fa;
-            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            transition: right 0.3s;
+            padding: 7px;
+            background: rgba(15, 23, 42, 0.94);
+            border: 3.5px solid #fbbf24;
+            border-radius: 20px;
+            box-shadow: inset 0 4px 16px rgba(0,0,0,0.75), 0 10px 26px rgba(0,0,0,0.55);
         }
-        .sidebar.open {
-            right: 0;
-        }
-        .sidebar h2 {
-            margin-top: 0;
-            color: #1e6091;
-        }
-        .sidebar-item {
-            margin: 10px 0;
-            padding: 10px;
+        .m3-tile {
+            position: relative;
             border-radius: 10px;
-            background: linear-gradient(145deg, #e0e0e0, #f8f9fa);
-            box-shadow: 5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s;
+            box-shadow: inset 0 2px 3px rgba(255,255,255,0.65), 0 3px 0 rgba(0,0,0,0.32);
         }
-        .sidebar-item:hover {
-            transform: scale(1.05);
+        .m3-tile.selected {
+            transform: scale(1.14);
+            z-index: 20;
+            box-shadow: 0 0 0 3px #f43f5e, 0 6px 14px rgba(244, 63, 94, 0.65);
         }
-        .news-bar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 250px;
-            height: 100%;
-            background-color: #fff;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            overflow-y: auto;
+        .m3-tile.matched {
+            transform: scale(0.05) rotate(22deg);
+            opacity: 0;
         }
-        .news-bar h2 {
-            margin-top: 0;
-            color: #1e6091;
-        }
-        .news-item {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 10px;
-            background: linear-gradient(145deg, #e0e0e0, #f8f9fa);
-            box-shadow: 5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
-    <h1>Зеленое пламя - не дай всем деревьям сгореть!</h1>
-    <div class="status-bar">
-        <div class="status-item">Бюджет: <span id="budget">100000</span>
-            <div class="tooltip" id="budgetTooltip">Заработано: 0, Потрачено: 0</div>
-        </div>
-        <div class="status-item">Время уровня: <span id="levelTime">1:00</span></div>
-        <div class="status-item">Класс пожарной опасности: <span id="fireClass">1</span></div>
-    </div>
-    <div class="toolbar">
-        <div class="tool" id="helicopter">
-            <img src="assets/helicopter.png" alt="Helicopter">
-            <div class="count" id="helicopterCount">3</div>
-            <div class="tooltip">Вертолет: Используется для тушения пожара с воздуха.</div>
-        </div>
-        <div class="tool" id="firefighter">
-            <img src="assets/firefighter.png" alt="Firefighter">
-            <div class="count" id="firefighterCount">20</div>
-            <div class="tooltip">Пожарный: Используется для тушения пожара вручную.</div>
-        </div>
-    </div>
-    <div class="shop">
-        <img src="assets/shop.png" alt="Shop" id="shopToggle">
-        <div class="tooltip">Магазин</div>
-        <div class="shop-items" id="shopItems">
-            <div data-item="seeds">Семена (10000) - Восстанавливают сгоревшие деревья.</div>
-            <div data-item="helicopterOrder">Вертолет (15000) - Заказывает дополнительный вертолет.</div>
-            <div data-item="firefighter">Пожарный (500) - Нанимает дополнительного пожарного.</div>
-        </div>
-    </div>
-    <div class="game-board" id="gameBoard">
-        <!-- Деревья и огонь -->
-    </div>
-    <div class="message" id="message"></div>
-    <div class="sidebar" id="sidebar">
-        <h2>Магазин</h2>
-        <div class="sidebar-item" data-item="seeds">Семена (10000) - Восстанавливают сгоревшие деревья.</div>
-        <div class="sidebar-item" data-item="helicopterOrder">Вертолет (15000) - Заказывает дополнительный вертолет.</div>
-        <div class="sidebar-item" data-item="firefighter">Пожарный (500) - Нанимает дополнительного пожарного.</div>
-    </div>
-    <div class="news-bar">
-        <h2>Новости леса</h2>
-        <div class="news-item" id="newsItem1">Лесные жители обеспокоены возможностью пожаров.</div>
-        <div class="news-item" id="newsItem2">В лесу повысился уровень пожарной опасности.</div>
-        <div class="news-item" id="newsItem3">Пожарные бригады готовы к действиям.</div>
-    </div>
-    <script>
-        const gameBoard = document.getElementById('gameBoard');
-        const budgetElement = document.getElementById('budget');
-        const levelTimeElement = document.getElementById('levelTime');
-        const fireClassElement = document.getElementById('fireClass');
-        const shopToggle = document.getElementById('shopToggle');
-        const shopItems = document.getElementById('shopItems');
-        const sidebar = document.getElementById('sidebar');
-        const message = document.getElementById('message');
-        const budgetTooltip = document.getElementById('budgetTooltip');
-        const newsBar = document.querySelector('.news-bar');
 
-        let budget = 100000;
-        let levelTime = 60;
-        let fireClass = 1;
-        let firesExtinguished = 0;
-        let selectedTool = null;
+<div id="app-shell">
 
-        const tools = {
-            helicopter: {
-                element: document.getElementById('helicopter'),
-                countElement: document.getElementById('helicopterCount'),
-                uses: 3,
-                cooldown: 20000,
-                message: 'Выбран вертолет',
-            },
-            firefighter: {
-                element: document.getElementById('firefighter'),
-                countElement: document.getElementById('firefighterCount'),
-                uses: 20,
-                cooldown: 10000,
-                message: 'Выбран пожарный',
+    <!-- Global Particle & Laser FX Overlay -->
+    <canvas id="fx-canvas" class="pointer-events-none absolute inset-0 z-50 w-full h-full"></canvas>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 1: 3D APARTMENT & LIVING NERYUNGRI CITYSCAPE (THREE.JS)      -->
+    <!-- =================================================================== -->
+    <section id="screen-apartment" class="relative w-full h-full overflow-hidden">
+
+        <!-- Three.js WebGL Viewport -->
+        <div id="webgl-container" class="w-full h-full cursor-grab active:cursor-grabbing relative"></div>
+
+        <!-- 3D Projected HTML Overlay (Furniture Pins + Live Cat/Darina Speech Bubbles) -->
+        <div id="overlay-3d-pins" class="pointer-events-none absolute inset-0 overflow-hidden z-20"></div>
+        <div id="overlay-3d-bubbles" class="pointer-events-none absolute inset-0 overflow-hidden z-25"></div>
+
+        <!-- =============================================================== -->
+        <!-- TOP HUD: Stars, Coins, Story Chapter, Dialogue Toast, Save/Map  -->
+        <!-- =============================================================== -->
+        <header class="absolute top-0 inset-x-0 z-30 px-2.5 py-2 flex items-start justify-between gap-2 pointer-events-none">
+
+            <!-- Left: Stars, Coins, Story Chapter Progress -->
+            <div class="flex items-center gap-1.5 pointer-events-auto shrink-0">
+                <button onclick="openTasksModal()" class="hs-pill px-2.5 py-1 rounded-full flex items-center gap-1 active:scale-95 transition">
+                    <span class="text-base">⭐</span>
+                    <span id="hud-stars" class="text-white font-black text-xs sm:text-sm">1</span>
+                    <span class="w-4 h-4 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center">+</span>
+                </button>
+                <div class="hs-pill px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <span class="text-sm">🪙</span>
+                    <span id="hud-coins" class="text-amber-300 font-black text-xs sm:text-sm">250</span>
+                </div>
+                <button onclick="openStoryModal()" class="hs-pill px-2.5 py-1 rounded-full flex items-center gap-1.5 cursor-pointer active:scale-95">
+                    <span class="text-xs">📖</span>
+                    <div class="w-20 sm:w-24 text-left">
+                        <div class="flex justify-between text-[9px] font-black text-amber-200 leading-none mb-0.5">
+                            <span id="hud-chapter-label">Глава 1</span>
+                            <span id="hud-progress-txt">0/14</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-pink-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Center: Darina's Multi-line Toast (Never clips!) -->
+            <div id="darina-toast-box" onclick="triggerRandomFamilyDialogue()"
+                 class="pointer-events-auto hs-pill px-3 py-1.5 rounded-2xl max-w-[310px] sm:max-w-[430px] flex items-center gap-2 border-pink-400/60 cursor-pointer transition hover:border-amber-300">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-pink-500 flex items-center justify-center text-sm shrink-0 shadow">
+                    👩🏻
+                </div>
+                <p id="hud-dialogue" class="text-[10.5px] sm:text-xs font-extrabold text-amber-100 leading-snug whitespace-normal break-words">
+                    «За окном Нерюнгринская ГРЭС дымит в -42°C, а мы обустраиваем нашу тёплую двушку по БТИ!»
+                </p>
+            </div>
+
+            <!-- Right: Save (iPhone Cloud/Local), BTI Map, Camera Controls -->
+            <div class="flex items-center gap-1 pointer-events-auto shrink-0">
+                <button onclick="openSaveModal()" class="hs-btn-green px-2.5 py-1 rounded-full text-white font-black text-[11px] flex items-center gap-1" title="Сохранение на iPhone">
+                    <span>💾</span>
+                    <span id="save-status-badge" class="hidden md:inline">Сохранено</span>
+                </button>
+                <button onclick="openBtiMapModal()" class="hs-btn-amber px-2.5 py-1 rounded-full text-slate-950 font-black text-[11px] flex items-center gap-1">
+                    <span>📐</span>
+                    <span class="hidden lg:inline">БТИ</span>
+                </button>
+                <button onclick="rotateCameraBy(-0.35)" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white font-black active:scale-90" title="Повернуть влево">↺</button>
+                <button onclick="rotateCameraBy(0.35)" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white font-black active:scale-90" title="Повернуть вправо">↻</button>
+                <button id="btn-sound" onclick="toggleSound()" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white active:scale-90">🔊</button>
+                <button onclick="requestGameFullscreen()" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white font-black active:scale-90">⛶</button>
+            </div>
+        </header>
+
+        <!-- =============================================================== -->
+        <!-- BOTTOM-CENTER: 3-STYLE 3D FURNITURE SELECTOR DOCK               -->
+        <!-- =============================================================== -->
+        <div id="style-selector-dock" class="absolute bottom-0 inset-x-0 z-40 hidden justify-center px-3 pb-2.5 pt-1 pointer-events-none">
+            <div class="pointer-events-auto bg-slate-900/95 backdrop-blur-md border-2 border-amber-400 rounded-3xl p-2.5 shadow-2xl w-full max-w-lg furn-pop">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0">3D Дизайн</span>
+                        <h4 id="dock-item-title" class="text-white font-black text-xs sm:text-sm truncate">Угловой диван в зале</h4>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="cancelFurnitureEdit()" class="w-7 h-7 rounded-full bg-slate-700 text-slate-200 font-black text-xs active:scale-90">✕</button>
+                        <button onclick="confirmFurnitureEdit()" class="hs-btn-green px-3.5 py-1 rounded-xl text-white font-black text-xs flex items-center gap-1">
+                            <span id="dock-confirm-label">✔ Выбрать</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="dock-style-cards" class="grid grid-cols-3 gap-2"></div>
+            </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- BOTTOM HUD: Tablet + Room Camera Presets + PLAY MATCH-3         -->
+        <!-- =============================================================== -->
+        <footer id="apt-bottom-bar" class="absolute bottom-0 inset-x-0 z-30 px-2.5 pb-2 flex items-end justify-between gap-2 pointer-events-none">
+
+            <div class="flex items-center gap-1.5 pointer-events-auto overflow-x-auto no-scrollbar max-w-[74%]">
+                <button onclick="openTasksModal()" class="hs-btn-blue relative px-3 py-2 rounded-2xl flex items-center gap-1.5 text-white shrink-0">
+                    <span class="text-base leading-none">📋</span>
+                    <span class="text-xs font-black">Планшет</span>
+                    <span id="tablet-badge" class="px-1.5 py-0.2 rounded-full bg-rose-600 border border-white text-white text-[10px] font-black">
+                        14
+                    </span>
+                </button>
+
+                <!-- Quick 3D Camera Presets Including Neryungri City Panorama -->
+                <div class="hs-pill p-1 rounded-2xl flex items-center gap-1 shrink-0">
+                    <button onclick="focusBtiRoom(0)" class="px-2 py-1 rounded-xl text-[10.5px] font-black text-emerald-300 hover:bg-white/10 transition">
+                        🏙️ Вся 3D + Нерюнгри
+                    </button>
+                    <button onclick="focusBtiRoom(1)" class="px-2 py-1 rounded-xl text-[10.5px] font-black text-amber-200 hover:bg-white/10 transition">
+                        🛋️ №1 Зал
+                    </button>
+                    <button onclick="focusBtiRoom(2)" class="px-2 py-1 rounded-xl text-[10.5px] font-black text-pink-200 hover:bg-white/10 transition">
+                        🛏️ №2 Спальня
+                    </button>
+                    <button onclick="focusBtiRoom(3)" class="px-2 py-1 rounded-xl text-[10.5px] font-black text-orange-200 hover:bg-white/10 transition">
+                        🧇 №3 Кухня
+                    </button>
+                    <button onclick="focusBtiRoom(7)" class="px-2 py-1 rounded-xl text-[10.5px] font-black text-cyan-200 hover:bg-white/10 transition">
+                        🛁 №7 Ванна/Холл
+                    </button>
+                </div>
+            </div>
+
+            <!-- Play Match-3 Level Button -->
+            <button onclick="openMatch3Screen()" class="hs-btn-green pointer-events-auto px-4 sm:px-5 py-2 rounded-2xl flex items-center gap-2.5 text-white shrink-0">
+                <div class="text-left leading-tight">
+                    <div class="text-[9px] font-extrabold uppercase tracking-wider text-emerald-100">Заработать ⭐</div>
+                    <div class="text-xs sm:text-sm font-black">УРОВЕНЬ <span id="hud-level-num">1</span></div>
+                </div>
+                <div class="w-7 h-7 rounded-xl bg-white/25 flex items-center justify-center text-sm font-black">
+                    ▶
+                </div>
+            </button>
+        </footer>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- SCREEN 2: HORIZONTAL MATCH-3 MINI-GAME (ESCALATING DIFFICULTY)      -->
+    <!-- =================================================================== -->
+    <section id="screen-match3" class="relative w-full h-full hidden flex-row items-center justify-center px-3 py-2 gap-3 sm:gap-5 overflow-hidden"
+             style="background: radial-gradient(circle at 25% 30%, #312e81 0%, #1e1b4b 55%, #090d16 100%);">
+
+        <aside class="w-56 sm:w-64 h-[92%] max-h-[410px] shrink-0 flex flex-col justify-between bg-slate-900/90 border-2 border-amber-400/50 rounded-3xl p-2.5 shadow-2xl">
+            <div class="flex items-center justify-between gap-1">
+                <button onclick="closeMatch3Screen()" class="hs-pill px-2.5 py-1 rounded-xl text-white text-[11px] font-black flex items-center gap-1 active:scale-90">
+                    <span>🏠</span>
+                    <span>В 3D-двушку</span>
+                </button>
+                <span class="bg-amber-400 text-slate-950 font-black text-[11px] px-2.5 py-0.5 rounded-full">
+                    УРОВЕНЬ <span id="m3-lvl-title">1</span>
+                </span>
+            </div>
+
+            <div class="bg-gradient-to-b from-amber-400 to-amber-600 p-2 rounded-2xl border-2 border-amber-200 shadow-md flex items-center justify-around">
+                <div class="text-center leading-none">
+                    <div class="text-[9px] font-black uppercase text-amber-950">Ходы</div>
+                    <div id="m3-moves" class="text-2xl sm:text-3xl font-black text-white drop-shadow">18</div>
+                </div>
+                <div class="h-8 w-0.5 bg-amber-950/25"></div>
+                <div>
+                    <div class="text-[9px] font-black uppercase text-amber-950 text-center mb-1">Цели уровня</div>
+                    <div id="m3-goals" class="flex items-center gap-1"></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/90 border border-pink-400/30 rounded-2xl p-2 flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-base shrink-0">
+                    👩🏻
+                </div>
+                <p id="m3-comment" class="text-[10px] font-extrabold text-amber-100 leading-tight">
+                    «Разбивай коробки переезда 📦 рядом с фишками! Квадрат 2x2 даёт Самолётик ✈️!»
+                </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1.5">
+                <button onclick="activateM3Booster('hammer')" id="btn-boost-hammer"
+                        class="bg-slate-800 hover:bg-slate-700 border-2 border-amber-400/60 rounded-xl p-1.5 flex flex-col items-center justify-center text-white active:scale-95 transition">
+                    <span class="text-base leading-none">🔨</span>
+                    <span class="text-[9px] font-black text-amber-300 mt-0.5">Молоток (<span id="cnt-hammer">2</span>)</span>
+                </button>
+                <button onclick="activateM3Booster('broom')" id="btn-boost-broom"
+                        class="bg-slate-800 hover:bg-slate-700 border-2 border-pink-400/60 rounded-xl p-1.5 flex flex-col items-center justify-center text-white active:scale-95 transition">
+                    <span class="text-base leading-none">🧹</span>
+                    <span class="text-[9px] font-black text-pink-300 mt-0.5">Ревизия (<span id="cnt-broom">1</span>)</span>
+                </button>
+                <button onclick="buyExtraMovesWithCoins()"
+                        class="bg-slate-800 hover:bg-slate-700 border-2 border-emerald-400/60 rounded-xl p-1.5 flex flex-col items-center justify-center text-white active:scale-95 transition">
+                    <span class="text-base leading-none">+5</span>
+                    <span class="text-[9px] font-black text-emerald-300 mt-0.5">100 🪙</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="m3-board-wrap flex items-center justify-center shrink-0">
+            <div id="match3-grid"></div>
+        </main>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 1: STORYLINE CHAPTERS & FAMILY DIALOGUE                       -->
+    <!-- =================================================================== -->
+    <div id="modal-story" class="absolute inset-0 z-50 bg-black/80 backdrop-blur-xs hidden items-center justify-center p-3">
+        <div class="bg-slate-900 w-full max-w-lg rounded-3xl border-4 border-pink-400 shadow-2xl overflow-hidden flex flex-col max-h-[90%] furn-pop">
+            <div class="bg-gradient-to-r from-pink-600 via-rose-500 to-amber-500 px-4 py-2.5 flex items-center justify-between text-white">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📖</span>
+                    <div>
+                        <h3 id="story-modal-title" class="text-xs sm:text-sm font-black">История семьи: Уют в Нерюнгри</h3>
+                        <p id="story-modal-sub" class="text-[10px] text-amber-100 font-bold">Глава 1 из 5</p>
+                    </div>
+                </div>
+                <button onclick="closeStoryModal()" class="w-7 h-7 rounded-full bg-white/20 text-white font-black text-xs">✕</button>
+            </div>
+            <div class="p-3.5 bg-slate-800 text-white space-y-2.5 overflow-y-auto">
+                <div class="flex items-start gap-2.5 bg-slate-900/90 p-3 rounded-2xl border border-pink-400/40">
+                    <div class="text-2xl shrink-0">👩🏻</div>
+                    <div>
+                        <div class="text-[11px] font-black text-pink-300">Дарина (любит идеальный порядок и уют)</div>
+                        <p id="story-modal-text" class="text-xs font-bold text-amber-100 leading-relaxed mt-0.5"></p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2.5 bg-slate-900/90 p-2.5 rounded-2xl border border-cyan-400/30">
+                    <div class="text-xl shrink-0">🐾</div>
+                    <p id="story-modal-cats" class="text-[11px] font-bold text-cyan-200 leading-snug"></p>
+                </div>
+                <div id="story-chapters-list" class="grid grid-cols-5 gap-1.5 pt-1"></div>
+            </div>
+            <div class="p-2.5 bg-slate-950 flex justify-end">
+                <button onclick="closeStoryModal()" class="hs-btn-green px-5 py-1.5 rounded-xl text-white font-black text-xs">
+                    Продолжить обустройство! ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 2: IPHONE SAFARI SAVE / CLOUD / BACKUP CODE                   -->
+    <!-- =================================================================== -->
+    <div id="modal-save" class="absolute inset-0 z-50 bg-black/80 backdrop-blur-xs hidden items-center justify-center p-3">
+        <div class="bg-slate-900 w-full max-w-lg rounded-3xl border-4 border-emerald-400 shadow-2xl overflow-hidden flex flex-col max-h-[92%] furn-pop">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 flex items-center justify-between text-white">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">💾</span>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black">Сохранение прогресса Дарины (iPhone & Облако)</h3>
+                        <p class="text-[10px] text-emerald-100 font-bold">Автосохранение включено в Safari, IndexedDB и Облаке</p>
+                    </div>
+                </div>
+                <button onclick="closeSaveModal()" class="w-7 h-7 rounded-full bg-white/20 text-white font-black text-xs">✕</button>
+            </div>
+            <div class="p-3 bg-slate-800 text-white space-y-2.5 overflow-y-auto text-xs">
+                <div class="bg-emerald-950/80 border border-emerald-400/50 rounded-2xl p-2.5 flex items-center justify-between">
+                    <div>
+                        <div class="font-black text-emerald-300">✔ Статус автосохранения: АКТИВЕН</div>
+                        <div id="save-last-time" class="text-[10px] text-slate-300">Все комнаты, звёзды и уровни сохраняются мгновенно</div>
+                    </div>
+                    <button onclick="saveGameProgress(true)" class="hs-btn-green px-3 py-1.5 rounded-xl text-white font-black text-[11px]">
+                        Сохранить сейчас
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-2.5 space-y-1.5">
+                    <div class="font-black text-amber-300 text-[11px]">📱 Код сохранения (для переноса между вкладками или телефонами):</div>
+                    <div class="flex gap-1.5">
+                        <input id="save-code-input" type="text" readonly
+                               class="flex-1 bg-slate-950 border border-slate-600 rounded-xl px-2.5 py-1.5 text-[11px] font-mono text-emerald-300 select-all"/>
+                        <button onclick="copySaveCode()" class="hs-btn-amber px-3 py-1.5 rounded-xl text-slate-950 font-black text-[11px] shrink-0">
+                            Скопировать
+                        </button>
+                    </div>
+                    <div class="flex gap-1.5 pt-1">
+                        <input id="load-code-input" type="text" placeholder="Вставь код сохранения сюда..."
+                               class="flex-1 bg-slate-950 border border-slate-600 rounded-xl px-2.5 py-1.5 text-[11px] font-mono text-white"/>
+                        <button onclick="loadFromSaveCode()" class="hs-btn-blue px-3 py-1.5 rounded-xl text-white font-black text-[11px] shrink-0">
+                            Загрузить код
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 3: BTI SCHEMATIC BLUEPRINT                                    -->
+    <!-- =================================================================== -->
+    <div id="modal-bti" class="absolute inset-0 z-50 bg-black/80 backdrop-blur-xs hidden items-center justify-center p-3">
+        <div class="bg-white w-full max-w-xl rounded-3xl border-4 border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90%] furn-pop">
+            <div class="bg-slate-900 px-4 py-2.5 flex items-center justify-between text-white">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📐</span>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black">Техпаспорт БТИ: 3D-Двушка Дарины в Нерюнгри</h3>
+                        <p class="text-[10px] text-amber-300 font-bold">Нажми на любую комнату — камера и Дарина перейдут туда!</p>
+                    </div>
+                </div>
+                <button onclick="closeBtiMapModal()" class="w-7 h-7 rounded-full bg-white/20 text-white font-black text-xs">✕</button>
+            </div>
+            <div class="p-3 bg-slate-100 flex-1 flex items-center justify-center overflow-hidden">
+                <svg viewBox="0 0 600 420" class="w-full h-full max-h-[265px]">
+                    <rect x="0" y="0" width="600" height="420" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+                    <rect x="110" y="25" width="75" height="90" fill="#bae6fd" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(7)"/>
+                    <text x="147" y="72" text-anchor="middle" font-size="13" font-weight="900" fill="#0f172a">7 (Ванна)</text>
+                    <rect x="185" y="25" width="55" height="90" fill="#e2e8f0" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(7)"/>
+                    <text x="212" y="72" text-anchor="middle" font-size="13" font-weight="900" fill="#0f172a">5</text>
+                    <rect x="240" y="75" width="90" height="40" fill="#bae6fd" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(7)"/>
+                    <text x="285" y="100" text-anchor="middle" font-size="13" font-weight="900" fill="#0f172a">6 (С/У)</text>
+                    <rect x="60" y="115" width="180" height="75" fill="#fde68a" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(7)"/>
+                    <text x="150" y="158" text-anchor="middle" font-size="14" font-weight="900" fill="#0f172a">4 (Прихожая)</text>
+                    <rect x="240" y="115" width="145" height="65" fill="#fde68a" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(2)"/>
+                    <text x="312" y="152" text-anchor="middle" font-size="14" font-weight="900" fill="#0f172a">8 (Коридор)</text>
+                    <rect x="60" y="190" width="180" height="165" fill="#fed7aa" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(3)"/>
+                    <text x="150" y="265" text-anchor="middle" font-size="15" font-weight="900" fill="#9a3412">3 • Кухня</text>
+                    <text x="150" y="285" text-anchor="middle" font-size="14" font-weight="900" fill="#0f172a">10,4 м²</text>
+                    <rect x="60" y="355" width="165" height="42" fill="#cbd5e1" stroke="#0f172a" stroke-width="2.5" class="cursor-pointer" onclick="jumpFromBtiModal(3)"/>
+                    <text x="142" y="381" text-anchor="middle" font-size="12" font-weight="900" fill="#334155">Балкон (Лаунж)</text>
+                    <rect x="240" y="180" width="145" height="175" fill="#fbcfe8" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(2)"/>
+                    <text x="312" y="260" text-anchor="middle" font-size="15" font-weight="900" fill="#9d174d">2 • Спальня</text>
+                    <text x="312" y="280" text-anchor="middle" font-size="14" font-weight="900" fill="#0f172a">10,5 м²</text>
+                    <rect x="385" y="115" width="165" height="240" fill="#bbf7d0" stroke="#0f172a" stroke-width="3" class="cursor-pointer hover:opacity-80" onclick="jumpFromBtiModal(1)"/>
+                    <text x="467" y="225" text-anchor="middle" font-size="16" font-weight="900" fill="#166534">1 • Зал</text>
+                    <text x="467" y="248" text-anchor="middle" font-size="15" font-weight="900" fill="#0f172a">17,4 м²</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 4: TABLET TO-DO LIST (14 FURNITURE ITEMS, 2-3 STARS EACH)     -->
+    <!-- =================================================================== -->
+    <div id="modal-tasks" class="absolute inset-0 z-50 bg-black/75 backdrop-blur-xs hidden items-center justify-center p-3">
+        <div class="bg-slate-900 w-full max-w-2xl rounded-3xl border-4 border-slate-600 shadow-2xl overflow-hidden flex flex-col max-h-[90%] furn-pop">
+            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-4 py-2.5 flex items-center justify-between text-white">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">📋</span>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black">Дизайнерский планшет Дарины (14 зон уюта)</h3>
+                        <p class="text-[10px] text-blue-100 font-bold">Проходи уровни «Три в ряд», копи ⭐ и открывай мебель!</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-black/35 px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs font-black">
+                        <span>⭐</span>
+                        <span id="modal-stars-count">1</span>
+                    </div>
+                    <button onclick="closeTasksModal()" class="w-7 h-7 rounded-full bg-white/20 text-white font-black text-xs">✕</button>
+                </div>
+            </div>
+            <div id="tasks-list-container" class="p-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto flex-1 bg-slate-100"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 5: LEVEL VICTORY / OUT OF MOVES                               -->
+    <!-- =================================================================== -->
+    <div id="modal-victory" class="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3">
+        <div class="bg-gradient-to-b from-amber-50 to-white w-full max-w-md rounded-3xl p-4 text-center border-4 border-amber-400 shadow-2xl furn-pop">
+            <div class="text-3xl mb-1">🏆⭐🐾</div>
+            <h2 class="text-xl font-black text-slate-900">УРОВЕНЬ ПРОЙДЕН!</h2>
+            <p id="victory-quote" class="text-xs font-extrabold text-pink-700 bg-pink-50 border border-pink-200 rounded-2xl p-2 my-2">
+                «Чистота и порядок! Балу и Багира мурчат — копим звёзды на новую мебель!»
+            </p>
+            <div class="grid grid-cols-2 gap-2 my-2">
+                <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-2 flex flex-col items-center">
+                    <span class="text-xl">⭐</span>
+                    <span class="text-xs font-black text-amber-950 mt-0.5">+1 Звезда уюта</span>
+                </div>
+                <div class="bg-emerald-100 border-2 border-emerald-300 rounded-2xl p-2 flex flex-col items-center">
+                    <span class="text-xl">🪙</span>
+                    <span id="victory-coins" class="text-xs font-black text-emerald-950 mt-0.5">+120 Монет</span>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-2">
+                <button onclick="returnToApartmentAfterWin()" class="hs-btn-amber flex-1 py-2 rounded-2xl text-slate-950 font-black text-xs">
+                    🏡 В 3D-двушку
+                </button>
+                <button onclick="nextMatch3LevelAfterWin()" class="hs-btn-green flex-1 py-2 rounded-2xl text-white font-black text-xs">
+                    ▶ Уровень дальше
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Firebase Cloud Persistence Module (with automatic LocalStorage/IndexedDB fallback for iPhone Safari) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let db = null;
+    let auth = null;
+    let cloudUser = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'darinascapes-neryungri-3d';
+
+    async function initCloudPersistence() {
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                    cloudUser = cred.user;
+                } else {
+                    const cred = await signInAnonymously(auth);
+                    cloudUser = cred.user;
+                }
+
+                if (cloudUser && db) {
+                    const docRef = doc(db, 'artifacts', appId, 'users', cloudUser.uid, 'savegame', 'main');
+                    const snap = await getDoc(docRef);
+                    if (snap.exists() && window.applyLoadedGameState) {
+                        window.applyLoadedGameState(snap.data(), 'Облако');
+                    }
+                }
             }
+        } catch (err) {
+            // Silent fallback to iPhone localStorage / IndexedDB
+        }
+    }
+
+    window.saveToCloudFirestore = async function(statePayload) {
+        if (!db || !cloudUser) return;
+        try {
+            const docRef = doc(db, 'artifacts', appId, 'users', cloudUser.uid, 'savegame', 'main');
+            await setDoc(docRef, statePayload, { merge: true });
+        } catch (e) {}
+    };
+
+    initCloudPersistence();
+</script>
+
+<script>
+    /*************************************************************************
+     * 1. AUTO-FULLSCREEN, LANDSCAPE COORDINATE MAPPER & SOUND SYNTHESIZER
+     *************************************************************************/
+    let autoFullscreenTriggered = false;
+    function requestGameFullscreen() {
+        const el = document.documentElement;
+        try {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            }
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+        } catch (e) {}
+    }
+
+    window.addEventListener('pointerdown', () => {
+        if (!autoFullscreenTriggered) {
+            autoFullscreenTriggered = true;
+            requestGameFullscreen();
+        }
+    }, { passive: true });
+
+    function getLogicalPoint(clientX, clientY) {
+        if (window.innerWidth < window.innerHeight) {
+            return {
+                x: clientY,
+                y: window.innerWidth - clientX,
+                w: window.innerHeight,
+                h: window.innerWidth
+            };
+        }
+        return {
+            x: clientX,
+            y: clientY,
+            w: window.innerWidth,
+            h: window.innerHeight
+        };
+    }
+
+    let soundEnabled = true;
+    let audioCtx = null;
+    function ensureAudio() {
+        if (!audioCtx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+        if (!soundEnabled) return;
+        try {
+            ensureAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'tap') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(720, now + 0.05);
+                gain.gain.setValueAtTime(0.09, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'meow') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(760, now + 0.11);
+                osc.frequency.exponentialRampToValueAtTime(440, now + 0.25);
+                gain.gain.setValueAtTime(0.13, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.26);
+                osc.start(now); osc.stop(now + 0.26);
+            } else if (type === 'match') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.05);
+                osc.frequency.setValueAtTime(783.99, now + 0.1);
+                gain.gain.setValueAtTime(0.14, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+                osc.start(now); osc.stop(now + 0.22);
+            } else if (type === 'rocket') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(920, now + 0.23);
+                gain.gain.setValueAtTime(0.13, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.24);
+                osc.start(now); osc.stop(now + 0.24);
+            } else if (type === 'bomb') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(42, now + 0.27);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+                osc.start(now); osc.stop(now + 0.28);
+            } else if (type === 'fanfare') {
+                osc.type = 'triangle';
+                [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => osc.frequency.setValueAtTime(f, now + i * 0.07));
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.36);
+                osc.start(now); osc.stop(now + 0.36);
+            }
+        } catch (e) {}
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        document.getElementById('btn-sound').textContent = soundEnabled ? '🔊' : '🔇';
+    }
+
+    /*************************************************************************
+     * 2. STORYLINE CHAPTERS (5 CHAPTERS) & 14 COZY FURNITURE ZONES (2-3 ⭐)
+     *************************************************************************/
+    const STORY_CHAPTERS = [
+        {
+            chapter: 1,
+            reqCount: 0,
+            title: 'Глава 1: Ключи от двушки в морозном Нерюнгри',
+            text: '«Ура! Мы получили ключи от нашей просторной двушки! За окном -42°C, вдалеке парит Нерюнгринская ГРЭС и горят огни парка, а внутри полно коробок. Наведём идеальный татарский уют и порядок!»',
+            cats: 'Балу: «Мяу! Где тут диван и мисочки?» • Багира: «Чур я первая проверяю все коробки!»'
+        },
+        {
+            chapter: 2,
+            reqCount: 3,
+            title: 'Глава 2: Тепло для Балу и Багиры',
+            text: '«Первые вещи на своих местах! Смотри, как Балу и Багира чинно ходят через дверные проёмы и греются у биокамина. Теперь нужно обустроить кухню и накрыть стол!»',
+            cats: 'Балу: «Мурр... пахнет порядком!» • Багира: «Требую кошачий дворец с гамаком в спальне!»'
+        },
+        {
+            chapter: 3,
+            reqCount: 6,
+            title: 'Глава 3: Аромат бельгийских вафель и татарского чая',
+            text: '«На кухне 10,4 м² теперь так душевно! Бельгийские вафли с шариками мороженого (как в нашем отпуске!) и душистый татарский чай с чак-чаком собирают всю семью!»',
+            cats: 'Балу: «Мяу, хочу есть! Поделитесь сливочным пломбиром!»'
+        },
+        {
+            chapter: 4,
+            reqCount: 10,
+            title: 'Глава 4: Спальня мечты и лазурное спа',
+            text: '«В спальне 10,5 м² ни одной складочки на покрывале, в шкафу-купе идеальная сортировка по цветам, а в ванной №7 набирается горячая пена после якутского мороза!»',
+            cats: 'Багира: «На улице метёт снег, а мы спим на королевской кровати!»'
+        },
+        {
+            chapter: 5,
+            reqCount: 14,
+            title: 'Глава 5: Идеальная двушка Дарины готова!',
+            text: '«Все 14 зон во всех комнатах по техпаспорту БТИ обустроены на 100%! В нашей двушке в Нерюнгри царят любовь, тепло, порядок и счастье!»',
+            cats: 'Балу и Багира: «Мурр-мяу! Лучший дом на свете! 💚💛»'
+        }
+    ];
+
+    // 14 Detailed 3D Furniture Zones across all BTI rooms (Costs 2-3 stars for deeper gameplay)
+    const FURNITURE_DATA = {
+        sofa: {
+            id: 'sofa', btiRoom: 1, cost: 2, completed: false, style: 0,
+            title: '№1 Зал: Угловой диван и пледы',
+            desc: 'Большой мягкий диван с подушками в просторном зале 17,4 м²',
+            pos: { x: 4.5, z: 0.7 }, walk: { x: 4.2, z: 2.1 },
+            praise: '«Диван встал идеально ровно! И подушки по цветам — Балу уже занял уголок!»',
+            styles: [
+                { name: 'Изумрудный велюр', color: '#059669', hex: 0x059669 },
+                { name: 'Молочный кашемир', color: '#f59e0b', hex: 0xfde68a },
+                { name: 'Терракотовый уют', color: '#ea580c', hex: 0xea580c }
+            ]
+        },
+        tv: {
+            id: 'tv', btiRoom: 1, cost: 3, completed: false, style: 0,
+            title: '№1 Зал: ТВ-стена 65" и биокамин',
+            desc: 'Домашний кинотеатр и живой огонь биокамина для вечеров в -42°C',
+            pos: { x: 4.6, z: -1.65 }, walk: { x: 4.5, z: -0.5 },
+            praise: '«Телевизор висит строго по уровню, а биокамин согревает весь зал!»',
+            styles: [
+                { name: 'Орех и Золото', color: '#b45309', hex: 0x78350f },
+                { name: 'Белый Мрамор', color: '#94a3b8', hex: 0xf1f5f9 },
+                { name: 'Графит Лофт', color: '#38bdf8', hex: 0x1e293b }
+            ]
+        },
+        rug_table: {
+            id: 'rug_table', btiRoom: 1, cost: 2, completed: false, style: 0,
+            title: '№1 Зал: Ковёр, торшер и чайный столик',
+            desc: 'Тёплый тканый ковёр с татарским орнаментом и журнальный столик',
+            pos: { x: 4.5, z: 2.2 }, walk: { x: 3.4, z: 2.3 },
+            praise: '«Какой мягкий ворс у ковра и тёплый свет от торшера! Ногам сразу тепло!»',
+            styles: [
+                { name: 'Казанский узор', color: '#d97706', hex: 0xfef3c7 },
+                { name: 'Сканди Изумруд', color: '#10b981', hex: 0xa7f3d0 },
+                { name: 'Пудровый шёлк', color: '#ec4899', hex: 0xfce7f3 }
+            ]
+        },
+        bookshelf: {
+            id: 'bookshelf', btiRoom: 1, cost: 3, completed: false, style: 0,
+            title: '№1 Зал: Стеллаж, книги и монстера',
+            desc: 'Дизайнерский стеллаж с идеально расставленными книгами и живыми растениями',
+            pos: { x: 6.1, z: 1.5 }, walk: { x: 5.3, z: 1.5 },
+            praise: '«Книги стоят по росту и оттенкам корешков, а зелёная монстера оживила весь угол!»',
+            styles: [
+                { name: 'Тёплый дуб', color: '#b45309', hex: 0x92400e },
+                { name: 'Сливочный эмаль', color: '#eab308', hex: 0xfef9c3 },
+                { name: 'Изумрудный сад', color: '#059669', hex: 0x065f46 }
+            ]
+        },
+        window_living: {
+            id: 'window_living', btiRoom: 1, cost: 2, completed: false, style: 0,
+            title: '№1 Зал: Панорамное окно на ГРЭС и шторы',
+            desc: 'Тёплый стеклопакет с бархатными шторами и гирляндой на фоне огней Нерюнгри',
+            pos: { x: 4.6, z: 4.15 }, walk: { x: 4.6, z: 3.4 },
+            praise: '«Через чистое окно видно сопки и огни Нерюнгри, а дома +25°C и ни малейшего сквозняка!»',
+            styles: [
+                { name: 'Золотистый бархат', color: '#f59e0b', hex: 0xd97706 },
+                { name: 'Изумрудный уют', color: '#10b981', hex: 0x047857 },
+                { name: 'Ягодный велюр', color: '#e11d48', hex: 0xbe123c }
+            ]
+        },
+        bed: {
+            id: 'bed', btiRoom: 2, cost: 3, completed: false, style: 0,
+            title: '№2 Спальня: Кровать King-Size и бра',
+            desc: 'Двуспальная кровать с каретной стяжкой и прикроватными тумбочками (10,5 м²)',
+            pos: { x: 0.4, z: 1.8 }, walk: { x: 0.2, z: 0.5 },
+            praise: '«Покрывало натянуто без единой складочки! В нашей спальне 10,5 м² так романтично!»',
+            styles: [
+                { name: 'Розовый жемчуг', color: '#db2777', hex: 0xdb2777 },
+                { name: 'Лазурный бархат', color: '#0284c7', hex: 0x0284c7 },
+                { name: 'Медовый шале', color: '#d97706', hex: 0xd97706 }
+            ]
+        },
+        wardrobe: {
+            id: 'wardrobe', btiRoom: 2, cost: 3, completed: false, style: 0,
+            title: '№2 Спальня: Шкаф-купе и бьюти-столик',
+            desc: 'Вместительный гардероб с зеркалом в пол и туалетным столиком Дарины',
+            pos: { x: 1.4, z: 0.1 }, walk: { x: 0.5, z: 0.4 },
+            praise: '«Каждая блузка и платьице развешаны по цветам! И столик с подсветкой для макияжа!»',
+            styles: [
+                { name: 'Пудра и Золото', color: '#f472b6', hex: 0xfce7f3 },
+                { name: 'Светлый Ясень', color: '#fbbf24', hex: 0xfef3c7 },
+                { name: 'Сапфировый люкс', color: '#38bdf8', hex: 0xe0f2fe }
+            ]
+        },
+        cattree: {
+            id: 'cattree', btiRoom: 2, cost: 2, completed: false, style: 0,
+            title: '№2 Спальня: Дворец Балу и Багиры',
+            desc: 'Многоярусный игровой комплекс с когтеточками, домиком и двумя мисочками',
+            pos: { x: -0.95, z: 3.3 }, walk: { x: -0.2, z: 3.1 },
+            praise: '«Балу и Багира в восторге! Теперь у каждого своя полочка и полная мисочка корма!»',
+            styles: [
+                { name: 'Сливочный плюш', color: '#f59e0b', hex: 0xfef3c7 },
+                { name: 'Мятный оазис', color: '#10b981', hex: 0xd1fae5 },
+                { name: 'Королевский розовый', color: '#ec4899', hex: 0xfce7f3 }
+            ]
+        },
+        kitchen: {
+            id: 'kitchen', btiRoom: 3, cost: 3, completed: false, style: 0,
+            title: '№3 Кухня: Гарнитур и двухдверный холодильник',
+            desc: 'Угловая кухня с духовым шкафом, подсветкой и органайзерами (10,4 м²)',
+            pos: { x: -4.2, z: 0.4 }, walk: { x: -4.2, z: 1.5 },
+            praise: '«На кухне 10,4 м² каждая баночка подписана, а столешница сияет чистотой!»',
+            styles: [
+                { name: 'Мятный Шалфей', color: '#10b981', hex: 0x059669 },
+                { name: 'Ванильный Классик', color: '#f59e0b', hex: 0xfde68a },
+                { name: 'Коралловый Шик', color: '#f43f5e', hex: 0xe11d48 }
+            ]
+        },
+        dining: {
+            id: 'dining', btiRoom: 3, cost: 2, completed: false, style: 0,
+            title: '№3 Кухня: Стол с вафлями и чак-чаком',
+            desc: 'Обеденная группа с бельгийскими вафлями с мороженым и татарским чаем',
+            pos: { x: -4.1, z: 2.7 }, walk: { x: -5.1, z: 2.5 },
+            praise: '«Бельгийские вафли с фисташковым мороженым и горячий чай с чак-чаком — объедение!»',
+            styles: [
+                { name: 'Отпускные вафли', color: '#2563eb', hex: 0x2563eb },
+                { name: 'Татарское чаепитие', color: '#10b981', hex: 0x059669 },
+                { name: 'Романтический вечер', color: '#e11d48', hex: 0xbe123c }
+            ]
+        },
+        balcony: {
+            id: 'balcony', btiRoom: 3, cost: 3, completed: false, style: 0,
+            title: '№3 Балкон: Тёплая лаунж-зона с панорамой',
+            desc: 'Утеплённая лоджия с плетёным креслом-коконом, гирляндами и видом на сопки',
+            pos: { x: -4.5, z: 5.0 }, walk: { x: -4.5, z: 3.6 },
+            praise: '«Даже на балконе теперь тёплый пол и уютное кресло! Можно пить какао и смотреть на снег!»',
+            styles: [
+                { name: 'Хюгге с гирляндой', color: '#f59e0b', hex: 0xd97706 },
+                { name: 'Зимний сад', color: '#10b981', hex: 0x059669 },
+                { name: 'Лаунж Розе', color: '#ec4899', hex: 0xdb2777 }
+            ]
+        },
+        bath: {
+            id: 'bath', btiRoom: 7, cost: 3, completed: false, style: 0,
+            title: '№7 Ванная: Джакузи с пеной и стиральная зона',
+            desc: 'Глубокая ванна с густой пеной, тумба с раковиной и стиральная машина в №5',
+            pos: { x: -4.2, z: -3.5 }, walk: { x: -3.6, z: -2.8 },
+            praise: '«Тёплая ванна с ароматной пеной и пушистые полотенца — лучшее спа в Нерюнгри!»',
+            styles: [
+                { name: 'Лазурный океан', color: '#06b6d4', hex: 0x38bdf8 },
+                { name: 'Золотой мрамор', color: '#fbbf24', hex: 0xfde047 },
+                { name: 'Изумрудное спа', color: '#10b981', hex: 0x34d399 }
+            ]
+        },
+        toilet: {
+            id: 'toilet', btiRoom: 6, cost: 2, completed: false, style: 0,
+            title: '№6 Санузел: Инсталляция и бойлер',
+            desc: 'Современный подвесной санузел с тёплым светом и водонагревателем',
+            pos: { x: -0.2, z: -2.65 }, walk: { x: -0.6, z: -1.6 },
+            praise: '«Санузел №6 сверкает чистотой, а горячая вода есть круглый год!»',
+            styles: [
+                { name: 'Белоснежный минимализм', color: '#38bdf8', hex: 0xe0f2fe },
+                { name: 'Тёплый травертин', color: '#f59e0b', hex: 0xfef3c7 },
+                { name: 'Морская лагуна', color: '#10b981', hex: 0xccfbf1 }
+            ]
+        },
+        hallway: {
+            id: 'hallway', btiRoom: 4, cost: 2, completed: false, style: 0,
+            title: '№4 Прихожая и №8 Коридор: Пуфик и ковровые дорожки',
+            desc: 'Шкаф для зимних пуховиков, мягкий банкетный пуф и дорожки с подогревом',
+            pos: { x: -4.2, z: -1.1 }, walk: { x: -3.5, z: -1.1 },
+            praise: '«С самого порога в прихожей №4 и коридоре №8 виден наш фирменный порядок!»',
+            styles: [
+                { name: 'Золотистый велюр', color: '#f59e0b', hex: 0xfde68a },
+                { name: 'Изумрудный холл', color: '#10b981', hex: 0xa7f3d0 },
+                { name: 'Ягодный акцент', color: '#ec4899', hex: 0xfbcfe8 }
+            ]
+        }
+    };
+
+    /*************************************************************************
+     * 3. GAME STATE & TRIPLE PERSISTENCE (IPHONE LOCALSTORAGE + INDEXEDDB + CLOUD)
+     *************************************************************************/
+    const SAVE_STORAGE_KEY = 'darinascapes_3d_neryungri_v3';
+    let stars = 1; // Starts with 1 star; items cost 2-3 stars so gameplay is engaging!
+    let coins = 250;
+    let currentLevel = 1;
+    let currentChapter = 1;
+    let boosts = { hammer: 2, broom: 1 };
+
+    function serializeGameState() {
+        const furnState = {};
+        Object.keys(FURNITURE_DATA).forEach(k => {
+            furnState[k] = {
+                c: FURNITURE_DATA[k].completed ? 1 : 0,
+                s: FURNITURE_DATA[k].style || 0
+            };
+        });
+        return {
+            v: 3,
+            stars,
+            coins,
+            currentLevel,
+            currentChapter,
+            boosts,
+            furn: furnState,
+            ts: Date.now()
+        };
+    }
+
+    function saveGameProgress(showToast = false) {
+        const data = serializeGameState();
+        const json = JSON.stringify(data);
+
+        // 1. iPhone Safari LocalStorage
+        try {
+            window.localStorage.setItem(SAVE_STORAGE_KEY, json);
+        } catch (e) {}
+
+        // 2. iPhone Safari IndexedDB Backup
+        try {
+            const req = indexedDB.open('DarinaScapesDB', 1);
+            req.onupgradeneeded = (ev) => {
+                ev.target.result.createObjectStore('saves');
+            };
+            req.onsuccess = (ev) => {
+                const db = ev.target.result;
+                const tx = db.transaction('saves', 'readwrite');
+                tx.objectStore('saves').put(data, 'main');
+            };
+        } catch (e) {}
+
+        // 3. Firebase Cloud Backup
+        if (window.saveToCloudFirestore) {
+            window.saveToCloudFirestore(data);
+        }
+
+        // Update UI Save Code & Timestamp
+        const codeInput = document.getElementById('save-code-input');
+        if (codeInput) {
+            try { codeInput.value = btoa(unescape(encodeURIComponent(json))); } catch (e) {}
+        }
+        const badge = document.getElementById('save-status-badge');
+        if (badge) badge.textContent = 'Сохранено ✓';
+        if (showToast) {
+            sayDarina('«Прогресс надёжно сохранён! Можно смело заходить с Айфона в любое время!»');
+        }
+    }
+
+    window.applyLoadedGameState = function(data, sourceName = 'Память') {
+        if (!data || typeof data !== 'object') return;
+        if (typeof data.stars === 'number') stars = data.stars;
+        if (typeof data.coins === 'number') coins = data.coins;
+        if (typeof data.currentLevel === 'number') currentLevel = data.currentLevel;
+        if (typeof data.currentChapter === 'number') currentChapter = data.currentChapter;
+        if (data.boosts) boosts = { ...boosts, ...data.boosts };
+        if (data.furn) {
+            Object.keys(data.furn).forEach(k => {
+                if (FURNITURE_DATA[k]) {
+                    FURNITURE_DATA[k].completed = Boolean(data.furn[k].c);
+                    FURNITURE_DATA[k].style = data.furn[k].s || 0;
+                }
+            });
+        }
+        if (sceneReady) {
+            rebuildAllFurnitureMeshes();
+            updateApartmentHUD();
+        }
+    };
+
+    function loadSavedProgressOnStartup() {
+        try {
+            const raw = window.localStorage.getItem(SAVE_STORAGE_KEY);
+            if (raw) {
+                window.applyLoadedGameState(JSON.parse(raw), 'Safari');
+                return;
+            }
+        } catch (e) {}
+
+        // Fallback check in IndexedDB
+        try {
+            const req = indexedDB.open('DarinaScapesDB', 1);
+            req.onupgradeneeded = (ev) => ev.target.result.createObjectStore('saves');
+            req.onsuccess = (ev) => {
+                const db = ev.target.result;
+                const tx = db.transaction('saves', 'readonly');
+                const getReq = tx.objectStore('saves').get('main');
+                getReq.onsuccess = () => {
+                    if (getReq.result) window.applyLoadedGameState(getReq.result, 'IndexedDB');
+                };
+            };
+        } catch (e) {}
+    }
+
+    function openSaveModal() {
+        playSound('tap');
+        saveGameProgress(false);
+        const m = document.getElementById('modal-save');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    }
+    function closeSaveModal() {
+        const m = document.getElementById('modal-save');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+    function copySaveCode() {
+        const input = document.getElementById('save-code-input');
+        if (!input) return;
+        input.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        playSound('fanfare');
+        sayDarina('«Код сохранения скопирован! Сохрани его в Заметках на Айфоне на всякий случай!»');
+    }
+    function loadFromSaveCode() {
+        const raw = document.getElementById('load-code-input').value.trim();
+        if (!raw) return;
+        try {
+            const json = decodeURIComponent(escape(atob(raw)));
+            const data = JSON.parse(json);
+            window.applyLoadedGameState(data, 'Код');
+            saveGameProgress(true);
+            closeSaveModal();
+            playSound('fanfare');
+        } catch (e) {
+            sayDarina('«Ой, проверь код сохранения — кажется, он скопирован не полностью!»');
+        }
+    }
+
+    /*************************************************************************
+     * 4. THREE.JS 3D WORLD: TEXTURED WALLS, LIVING NERYUNGRI CITY & ACTORS
+     *************************************************************************/
+    let scene, camera, renderer, raycaster;
+    let floorPlaneMesh;
+    let sceneReady = false;
+    const furnitureMeshes = {};
+    const clickableFloorObjects = [];
+
+    // 3D Camera Orbit & Target
+    let camTarget = new THREE.Vector3(0.4, 0, 0.7);
+    let camDesiredTarget = new THREE.Vector3(0.4, 0, 0.7);
+    let camAngle = 0.0;
+    let camDesiredAngle = 0.0;
+    let camDist = 14.8;
+    let camDesiredDist = 14.8;
+    let camHeight = 12.6;
+    let camDesiredHeight = 12.6;
+
+    // Animated Neryungri City Background Objects
+    const gresSteamPuffs = [];
+    const cityPedestrians = [];
+    const cityCars = [];
+    let snowSystem = null;
+    let targetRingMesh = null;
+
+    // Procedural Texture Generators (So walls NEVER look white or blend together!)
+    function makeWallpaperTexture(bgHex, stripeHex, wainscotHex, topTrimHex) {
+        const c = document.createElement('canvas');
+        c.width = 256; c.height = 256;
+        const ctx = c.getContext('2d');
+
+        // Main Warm Wallpaper Background
+        ctx.fillStyle = bgHex;
+        ctx.fillRect(0, 0, 256, 256);
+
+        // Cozy Vertical Stripes & Subtle Diamond Pattern
+        ctx.fillStyle = stripeHex;
+        for (let x = 0; x < 256; x += 32) {
+            ctx.fillRect(x, 0, 12, 256);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.07)';
+        ctx.lineWidth = 2;
+        for (let y = 28; y < 195; y += 36) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(256, y);
+            ctx.stroke();
+        }
+
+        // Lower Wood Wainscoting Panel (Панель и высокий плинтус)
+        ctx.fillStyle = wainscotHex;
+        ctx.fillRect(0, 198, 256, 58);
+        ctx.fillStyle = '#3f2305';
+        ctx.fillRect(0, 240, 256, 16); // Dark wood baseboard
+
+        // Upper Crown Molding Trim
+        ctx.fillStyle = topTrimHex;
+        ctx.fillRect(0, 0, 256, 18);
+
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(2, 1);
+        return tex;
+    }
+
+    function makeParquetTexture(c1, c2) {
+        const c = document.createElement('canvas');
+        c.width = 128; c.height = 128;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = c1;
+        ctx.fillRect(0, 0, 128, 128);
+        ctx.fillStyle = c2;
+        ctx.fillRect(0, 0, 64, 32);
+        ctx.fillRect(64, 32, 64, 32);
+        ctx.fillRect(0, 64, 64, 32);
+        ctx.fillRect(64, 96, 64, 32);
+        ctx.strokeStyle = 'rgba(60,25,5,0.32)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(0, 0, 128, 128);
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(5, 5);
+        return tex;
+    }
+
+    function makeTileTexture(bg, lineCol) {
+        const c = document.createElement('canvas');
+        c.width = 128; c.height = 128;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 128, 128);
+        ctx.strokeStyle = lineCol;
+        ctx.lineWidth = 5;
+        ctx.strokeRect(4, 4, 120, 120);
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(5, 5);
+        return tex;
+    }
+
+    function initThreeJSWorld() {
+        const container = document.getElementById('webgl-container');
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0c192c);
+        scene.fog = new THREE.FogExp2(0x0c192c, 0.014);
+
+        const lp = getLogicalPoint(0, 0);
+        camera = new THREE.PerspectiveCamera(40, lp.w / lp.h, 0.1, 140);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        renderer.setSize(lp.w, lp.h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        raycaster = new THREE.Raycaster();
+
+        // Warm Interior & Winter Moonlight Lighting
+        const hemi = new THREE.HemisphereLight(0xdbeafe, 0x78350f, 0.72);
+        scene.add(hemi);
+
+        const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.88);
+        dirLight.position.set(10, 20, 12);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.camera.near = 2;
+        dirLight.shadow.camera.far = 48;
+        const d = 14;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        scene.add(dirLight);
+
+        // Warm Cozy Point Lights inside each BTI room
+        const livingLight = new THREE.PointLight(0xffedd5, 0.75, 11);
+        livingLight.position.set(4.4, 3.2, 1.2);
+        scene.add(livingLight);
+
+        const bedLight = new THREE.PointLight(0xfce7f3, 0.65, 9);
+        bedLight.position.set(0.3, 3.0, 2.0);
+        scene.add(bedLight);
+
+        const kitchenLight = new THREE.PointLight(0xfef3c7, 0.7, 10);
+        kitchenLight.position.set(-4.0, 3.0, 2.0);
+        scene.add(kitchenLight);
+
+        buildLivingNeryungriCityDiorama();
+        buildBtiApartmentArchitecture();
+        rebuildAllFurnitureMeshes();
+        buildActors3D();
+
+        // Green Walk Target Indicator Ring
+        const ringGeo = new THREE.RingGeometry(0.22, 0.34, 24);
+        ringGeo.rotateX(-Math.PI / 2);
+        targetRingMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide }));
+        targetRingMesh.position.y = 0.05;
+        targetRingMesh.visible = false;
+        scene.add(targetRingMesh);
+
+        setupViewportInteractions(container);
+        sceneReady = true;
+    }
+
+    /*************************************************************************
+     * 5. LIVING NERYUNGRI 3D CITYSCAPE (ГРЭС, ДОМА, ПАРК, ЛЮДИ, СНЕГ)
+     *************************************************************************/
+    function buildLivingNeryungriCityDiorama() {
+        // Snowy ground expanse around the apartment building
+        const snowGround = new THREE.Mesh(
+            new THREE.PlaneGeometry(110, 110),
+            new THREE.MeshLambertMaterial({ color: 0xdbeafe })
+        );
+        snowGround.rotation.x = -Math.PI / 2;
+        snowGround.position.y = -0.15;
+        snowGround.receiveShadow = true;
+        scene.add(snowGround);
+
+        // Apartment Exterior Pedestal Foundation
+        const foundation = new THREE.Mesh(
+            new THREE.BoxGeometry(14.6, 0.3, 12.2),
+            new THREE.MeshLambertMaterial({ color: 0x334155 })
+        );
+        foundation.position.set(0.1, -0.14, 0.6);
+        scene.add(foundation);
+
+        // Snowy Stanovoy Sopki (Hills of Neryungri) around the horizon
+        const hillPositions = [
+            { x: -24, z: -26, r: 14, h: 11 },
+            { x: -6,  z: -29, r: 17, h: 14 },
+            { x: 16,  z: -27, r: 15, h: 12 },
+            { x: 30,  z: -16, r: 13, h: 9.5 },
+            { x: -28, z: 6,   r: 12, h: 8.5 }
+        ];
+        hillPositions.forEach(hp => {
+            const hill = new THREE.Mesh(
+                new THREE.ConeGeometry(hp.r, hp.h, 16),
+                new THREE.MeshLambertMaterial({ color: 0x94a3b8 })
+            );
+            hill.position.set(hp.x, hp.h / 2 - 0.2, hp.z);
+            scene.add(hill);
+
+            const cap = new THREE.Mesh(
+                new THREE.ConeGeometry(hp.r * 0.55, hp.h * 0.55, 16),
+                new THREE.MeshLambertMaterial({ color: 0xf8fafc })
+            );
+            cap.position.set(hp.x, hp.h * 0.72 - 0.15, hp.z);
+            scene.add(cap);
+        });
+
+        // НЕРЮНГРИНСКАЯ ГРЭС (Neryungri Power Plant with 3 tall red/white striped chimneys & steam!)
+        const gresGroup = new THREE.Group();
+        gresGroup.position.set(14, 0, -19);
+
+        const mainHall = new THREE.Mesh(
+            new THREE.BoxGeometry(9.5, 4.2, 4.5),
+            new THREE.MeshLambertMaterial({ color: 0x475569 })
+        );
+        mainHall.position.y = 2.1;
+        gresGroup.add(mainHall);
+
+        // Glowing Industrial Windows on GRES
+        for (let wx = -3.6; wx <= 3.6; wx += 1.2) {
+            const wMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(0.7, 0.9, 4.56),
+                new THREE.MeshBasicMaterial({ color: 0xfef08a })
+            );
+            wMesh.position.set(wx, 2.4, 0);
+            gresGroup.add(wMesh);
+        }
+
+        // 3 Striped Smokestacks + Rising Steam Puffs
+        [-2.8, 0, 2.8].forEach((cx, sIdx) => {
+            const stackH = 9.5 + (sIdx === 1 ? 1.5 : 0);
+            for (let seg = 0; seg < 6; seg++) {
+                const segMesh = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.38 - seg * 0.02, 0.42 - seg * 0.02, stackH / 6, 12),
+                    new THREE.MeshLambertMaterial({ color: seg % 2 === 0 ? 0xdc2626 : 0xf8fafc })
+                );
+                segMesh.position.set(cx, (seg + 0.5) * (stackH / 6), -0.8);
+                gresGroup.add(segMesh);
+            }
+
+            // Create 5 animated steam puffs per chimney
+            for (let p = 0; p < 5; p++) {
+                const puff = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.55 + p * 0.18, 10, 10),
+                    new THREE.MeshLambertMaterial({ color: 0xf8fafc, transparent: true, opacity: 0.65 })
+                );
+                const baseTop = stackH;
+                puff.position.set(14 + cx, baseTop + p * 1.1, -19.8);
+                scene.add(puff);
+                gresSteamPuffs.push({
+                    mesh: puff,
+                    baseX: 14 + cx,
+                    baseY: baseTop,
+                    baseZ: -19.8,
+                    offset: p * 0.2 + sIdx * 0.33
+                });
+            }
+        });
+        scene.add(gresGroup);
+
+        // COLORFUL NERYUNGRI RESIDENTIAL PANEL BUILDINGS (Around the apartment)
+        const buildingSpecs = [
+            { x: -13.5, z: -13.5, w: 5.5, h: 6.5, d: 3.2, col: 0xea580c }, // Warm Orange North Building
+            { x: -6.0,  z: -14.5, w: 6.2, h: 7.5, d: 3.2, col: 0x0284c7 }, // Cyan/Blue Building
+            { x: 3.0,   z: -14.5, w: 5.8, h: 6.8, d: 3.2, col: 0xd97706 }, // Amber Building
+            { x: -14.2, z: -3.5,  w: 3.6, h: 5.8, d: 5.5, col: 0x059669 }, // Emerald Building
+            { x: 13.8,  z: -2.0,  w: 3.8, h: 6.4, d: 6.2, col: 0xdb2777 }  // Berry Building
+        ];
+        buildingSpecs.forEach(b => {
+            const bGroup = new THREE.Group();
+            const hull = new THREE.Mesh(
+                new THREE.BoxGeometry(b.w, b.h, b.d),
+                new THREE.MeshLambertMaterial({ color: b.col })
+            );
+            hull.position.y = b.h / 2;
+            bGroup.add(hull);
+
+            // Snow Roof Cap
+            const roof = new THREE.Mesh(
+                new THREE.BoxGeometry(b.w + 0.2, 0.25, b.d + 0.2),
+                new THREE.MeshLambertMaterial({ color: 0xf8fafc })
+            );
+            roof.position.y = b.h + 0.12;
+            bGroup.add(roof);
+
+            // Cozy Lit Windows
+            const rows = Math.floor(b.h / 1.3);
+            const cols = Math.floor(b.w / 1.2);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if ((r + c) % 3 === 0) continue;
+                    const win = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.55, 0.65, b.d + 0.08),
+                        new THREE.MeshBasicMaterial({ color: (r + c) % 2 === 0 ? 0xfef08a : 0xfde047 })
+                    );
+                    win.position.set(
+                        -b.w / 2 + 0.8 + c * 1.15,
+                        1.0 + r * 1.25,
+                        0
+                    );
+                    bGroup.add(win);
+                }
+            }
+            bGroup.position.set(b.x, 0, b.z);
+            scene.add(bGroup);
+        });
+
+        // NERYUNGRI PARK PATHWAY, SNOWY SPRUCE TREES & GLOWING STREET LAMPS
+        // Snowy road & park promenade in front (z = 8.2) and behind (z = -8.5)
+        const frontRoad = new THREE.Mesh(
+            new THREE.BoxGeometry(36, 0.08, 2.2),
+            new THREE.MeshLambertMaterial({ color: 0x475569 })
+        );
+        frontRoad.position.set(0, -0.08, 8.8);
+        scene.add(frontRoad);
+
+        const parkWalkway = new THREE.Mesh(
+            new THREE.BoxGeometry(32, 0.09, 1.5),
+            new THREE.MeshLambertMaterial({ color: 0x94a3b8 })
+        );
+        parkWalkway.position.set(0, -0.07, 6.8);
+        scene.add(parkWalkway);
+
+        // Taiga Spruce Trees around the park
+        const treeCoords = [
+            [-10, 6.2], [-7.5, 6.9], [-2.5, 6.6], [2.5, 6.9], [7.8, 6.4], [10.8, 6.8],
+            [-11, -7.8], [-8, -8.5], [-1, -7.8], [5.5, -8.2], [9.5, -7.5],
+            [-10.5, 1.5], [10.2, 2.2], [10.5, -4.5]
+        ];
+        treeCoords.forEach(([tx, tz]) => {
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.14, 0.2, 0.8, 8),
+                new THREE.MeshLambertMaterial({ color: 0x5c3a21 })
+            );
+            trunk.position.y = 0.4;
+            tree.add(trunk);
+
+            [0.9, 1.5, 2.1].forEach((ly, i) => {
+                const cone = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.85 - i * 0.2, 1.1, 8),
+                    new THREE.MeshLambertMaterial({ color: 0x065f46 })
+                );
+                cone.position.y = ly;
+                tree.add(cone);
+
+                const snowCone = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.78 - i * 0.2, 0.4, 8),
+                    new THREE.MeshLambertMaterial({ color: 0xf8fafc })
+                );
+                snowCone.position.y = ly + 0.34;
+                tree.add(snowCone);
+            });
+            tree.position.set(tx, -0.1, tz);
+            scene.add(tree);
+        });
+
+        // Glowing Park Street Lamps
+        [-8.5, -3.0, 3.0, 8.5].forEach(lx => {
+            const lamp = new THREE.Group();
+            const pole = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.06, 0.08, 2.4, 8),
+                new THREE.MeshLambertMaterial({ color: 0x1e293b })
+            );
+            pole.position.y = 1.2;
+            lamp.add(pole);
+
+            const bulb = new THREE.Mesh(
+                new THREE.SphereGeometry(0.22, 10, 10),
+                new THREE.MeshBasicMaterial({ color: 0xfef08a })
+            );
+            bulb.position.y = 2.45;
+            lamp.add(bulb);
+            lamp.position.set(lx, -0.1, 6.2);
+            scene.add(lamp);
+        });
+
+        // ANIMATED TOWNSPEOPLE IN WINTER PARKAS STROLLING OUTSIDE
+        const coatColors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0xa855f7];
+        for (let i = 0; i < 5; i++) {
+            const pGroup = new THREE.Group();
+            const coat = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.18, 0.24, 0.72, 10),
+                new THREE.MeshLambertMaterial({ color: coatColors[i % coatColors.length] })
+            );
+            coat.position.y = 0.55;
+            pGroup.add(coat);
+
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.16, 10, 10),
+                new THREE.MeshLambertMaterial({ color: 0xf7cfb2 })
+            );
+            head.position.y = 1.05;
+            pGroup.add(head);
+
+            // Warm winter beanie hat
+            const hat = new THREE.Mesh(
+                new THREE.SphereGeometry(0.17, 10, 8),
+                new THREE.MeshLambertMaterial({ color: 0xf8fafc })
+            );
+            hat.position.y = 1.13;
+            pGroup.add(hat);
+
+            const startX = -12 + i * 6;
+            const zLane = i % 2 === 0 ? 6.65 : 7.05;
+            const dir = i % 2 === 0 ? 1 : -1;
+            pGroup.position.set(startX, -0.05, zLane);
+            scene.add(pGroup);
+            cityPedestrians.push({ group: pGroup, dir, speed: 0.65 + (i % 3) * 0.15, phase: i * 1.4 });
+        }
+
+        // ANIMATED CARS DRIVING ON SNOWY NERYUNGRI AVENUE
+        const carColors = [0xdc2626, 0x2563eb];
+        for (let i = 0; i < 2; i++) {
+            const car = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(1.45, 0.42, 0.76),
+                new THREE.MeshLambertMaterial({ color: carColors[i] })
+            );
+            body.position.y = 0.32;
+            car.add(body);
+            const cabin = new THREE.Mesh(
+                new THREE.BoxGeometry(0.82, 0.34, 0.68),
+                new THREE.MeshLambertMaterial({ color: 0xe2e8f0 })
+            );
+            cabin.position.set(-0.05, 0.65, 0);
+            car.add(cabin);
+            // Headlights
+            const hl = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.14, 0.62),
+                new THREE.MeshBasicMaterial({ color: 0xfef08a })
+            );
+            hl.position.set(0.73, 0.34, 0);
+            car.add(hl);
+
+            const dir = i === 0 ? 1 : -1;
+            car.position.set(i === 0 ? -15 : 15, -0.04, i === 0 ? 8.45 : 9.15);
+            if (dir < 0) car.rotation.y = Math.PI;
+            scene.add(car);
+            cityCars.push({ group: car, dir, speed: 3.4 + i * 0.6 });
+        }
+
+        // 3D FALLING SNOWFLAKES
+        const snowGeo = new THREE.BufferGeometry();
+        const snowCount = 320;
+        const posArr = new Float32Array(snowCount * 3);
+        for (let i = 0; i < snowCount; i++) {
+            posArr[i * 3]     = (Math.random() - 0.5) * 42;
+            posArr[i * 3 + 1] = Math.random() * 16;
+            posArr[i * 3 + 2] = (Math.random() - 0.5) * 36;
+        }
+        snowGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+        snowSystem = new THREE.Points(
+            snowGeo,
+            new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8 })
+        );
+        scene.add(snowSystem);
+    }
+
+    /*************************************************************************
+     * 6. BTI APARTMENT ARCHITECTURE WITH DISTINCT WALLPAPERS & DARK CAPS
+     *************************************************************************/
+    function buildBtiApartmentArchitecture() {
+        // Distinct Room Floor Materials
+        const matLivingFloor  = new THREE.MeshLambertMaterial({ map: makeParquetTexture('#c87d3b', '#df9450') });
+        const matBedroomFloor = new THREE.MeshLambertMaterial({ map: makeParquetTexture('#b4692c', '#ca7c3b') });
+        const matKitchenFloor = new THREE.MeshLambertMaterial({ map: makeTileTexture('#fffbeb', '#f59e0b') });
+        const matBathFloor    = new THREE.MeshLambertMaterial({ map: makeTileTexture('#ecfeff', '#06b6d4') });
+        const matCorrFloor    = new THREE.MeshLambertMaterial({ map: makeTileTexture('#fef3c7', '#d97706') });
+        const matBalconyFloor = new THREE.MeshLambertMaterial({ map: makeTileTexture('#e2e8f0', '#64748b') });
+
+        function addRoomFloor(x1, z1, x2, z2, mat) {
+            const w = x2 - x1, d = z2 - z1;
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, d), mat);
+            mesh.position.set(x1 + w / 2, 0, z1 + d / 2);
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+            clickableFloorObjects.push(mesh);
+        }
+
+        // Exact BTI Rooms:
+        addRoomFloor(-4.8, -4.4, -2.5, -2.0, matBathFloor);    // #7 Ванная
+        addRoomFloor(-2.5, -4.4, -1.2, -2.0, matCorrFloor);    // #5 Кладовая
+        addRoomFloor(-1.2, -3.2,  1.2, -2.0, matBathFloor);    // #6 Санузел
+        addRoomFloor(-6.2, -2.0, -1.2, -0.2, matCorrFloor);    // #4 Прихожая
+        addRoomFloor(-1.2, -2.0,  2.2, -0.4, matCorrFloor);    // #8 Коридор
+        addRoomFloor(-6.2, -0.2, -1.2,  4.2, matKitchenFloor); // #3 Кухня 10,4 м²
+        addRoomFloor(-6.2,  4.2, -1.6,  5.6, matBalconyFloor); // #3b Балкон
+        addRoomFloor(-1.2, -0.4,  2.2,  4.2, matBedroomFloor); // #2 Спальня 10,5 м²
+        addRoomFloor( 2.2, -2.0,  6.5,  4.2, matLivingFloor);  // #1 Зал 17,4 м²
+
+        // Distinct Procedural Wallpaper Materials (Never white/blending!)
+        const wpOuter   = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#e6d5b8', '#d8c29d', '#78350f', '#451a03') });
+        const wpLiving  = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#d1fae5', '#a7f3d0', '#78350f', '#065f46') });
+        const wpBedroom = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#fce7f3', '#fbcfe8', '#831843', '#500724') });
+        const wpKitchen = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#ffedd5', '#fed7aa', '#9a3412', '#7c2d12') });
+        const wpBath    = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#cffafe', '#a5f3fc', '#0e7490', '#155e75') });
+
+        // Dark Walnut Wall Top Cap Material so every wall is sharply outlined from above!
+        const wallCapMat = new THREE.MeshLambertMaterial({ color: 0x451a03 });
+
+        function addWallSegment(x1, z1, x2, z2, h = 2.05, thickness = 0.18, wpMat = wpOuter) {
+            const len = Math.hypot(x2 - x1, z2 - z1);
+            const angle = Math.atan2(z2 - z1, x2 - x1);
+
+            const wallGroup = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(len, h, thickness), wpMat);
+            body.position.y = h / 2;
+            body.castShadow = true;
+            body.receiveShadow = true;
+            wallGroup.add(body);
+
+            // Crisp Dark Top Cap Moulding (Prevents walls from blending together!)
+            const cap = new THREE.Mesh(new THREE.BoxGeometry(len + 0.04, 0.09, thickness + 0.04), wallCapMat);
+            cap.position.y = h + 0.045;
+            wallGroup.add(cap);
+
+            wallGroup.position.set((x1 + x2) / 2, 0, (z1 + z2) / 2);
+            wallGroup.rotation.y = -angle;
+            scene.add(wallGroup);
+        }
+
+        // Top & Back Outer Walls
+        addWallSegment(-4.8, -4.4, -1.2, -4.4, 2.1, 0.2, wpBath);
+        addWallSegment(-4.8, -4.4, -4.8, -2.0, 2.1, 0.2, wpBath);
+        addWallSegment(-1.2, -4.4, -1.2, -3.2, 2.1, 0.2, wpBath);
+        addWallSegment(-1.2, -3.2,  1.2, -3.2, 2.1, 0.2, wpBath);
+        addWallSegment( 1.2, -3.2,  1.2, -2.0, 2.1, 0.2, wpBath);
+        addWallSegment( 1.2, -2.0,  6.5, -2.0, 2.1, 0.2, wpLiving);
+        addWallSegment(-6.2, -2.0, -4.8, -2.0, 2.1, 0.2, wpOuter);
+
+        // Left & Right Outer Walls
+        addWallSegment(-6.2, -2.0, -6.2, 5.6, 2.0, 0.2, wpKitchen);
+        addWallSegment( 6.5, -2.0,  6.5, 4.2, 2.0, 0.2, wpLiving);
+
+        // Interior Partition Walls with Exact BTI Doorway Gaps:
+        // Between Bath #7 and Storage #5
+        addWallSegment(-2.5, -4.4, -2.5, -2.0, 1.95, 0.14, wpBath);
+        // Bottom of #7 & #5 with doorways at x=-3.6 and x=-1.8
+        addWallSegment(-4.8, -2.0, -4.05, -2.0, 1.95, 0.14, wpBath);
+        addWallSegment(-3.15, -2.0, -2.25, -2.0, 1.95, 0.14, wpBath);
+        addWallSegment(-1.45, -2.0, -1.2, -2.0, 1.95, 0.14, wpBath);
+
+        // Bottom of Toilet #6 with doorway at x=-0.6
+        addWallSegment(-1.2, -2.0, -0.95, -2.0, 1.95, 0.14, wpBath);
+        addWallSegment(-0.2, -2.0,  1.2, -2.0, 1.95, 0.14, wpBath);
+
+        // Between Hallway #4 and Corridor #8 (Open portal at z=-1.1)
+        addWallSegment(-1.2, -2.0, -1.2, -1.55, 1.95, 0.14, wpOuter);
+        addWallSegment(-1.2, -0.65, -1.2, -0.2, 1.95, 0.14, wpOuter);
+
+        // Between Hallway #4 and Kitchen #3 (Doorway at x=-4.8)
+        addWallSegment(-6.2, -0.2, -5.3, -0.2, 1.95, 0.14, wpKitchen);
+        addWallSegment(-4.25, -0.2, -1.2, -0.2, 1.95, 0.14, wpKitchen);
+
+        // Between Kitchen #3 and Bedroom #2
+        addWallSegment(-1.2, -0.2, -1.2, 4.2, 1.95, 0.15, wpBedroom);
+
+        // Between Corridor #8 and Bedroom #2 (Doorway at x=-0.2)
+        addWallSegment(-1.2, -0.4, -0.65, -0.4, 1.95, 0.14, wpBedroom);
+        addWallSegment( 0.3, -0.4,  2.2, -0.4, 1.95, 0.14, wpBedroom);
+
+        // Between Corridor #8 / Bedroom #2 and Living Room #1 (Wide doorway at z=-1.15)
+        addWallSegment(2.2, -2.0, 2.2, -1.65, 1.95, 0.16, wpLiving);
+        addWallSegment(2.2, -0.65, 2.2, 4.2,  1.95, 0.16, wpLiving);
+
+        // Low Cutaway South Front Walls & Balcony Glass Railing
+        addWallSegment(-6.2, 4.2, -5.0, 4.2, 0.65, 0.16, wpKitchen);
+        addWallSegment(-3.8, 4.2,  6.5, 4.2, 0.65, 0.16, wpOuter);
+        addWallSegment(-6.2, 5.6, -1.6, 5.6, 0.75, 0.14, wpOuter);
+        addWallSegment(-1.6, 4.2, -1.6, 5.6, 0.75, 0.14, wpOuter);
+    }
+
+    /*************************************************************************
+     * 7. 3D PROCEDURAL FURNITURE BUILDER FOR ALL 14 ZONES
+     *************************************************************************/
+    function rebuildAllFurnitureMeshes() {
+        Object.keys(FURNITURE_DATA).forEach(id => {
+            if (furnitureMeshes[id]) {
+                scene.remove(furnitureMeshes[id]);
+            }
+            const item = FURNITURE_DATA[id];
+            const isEditing = editingSpotId === id;
+            const showDone = item.completed || isEditing;
+            const st = isEditing ? previewStyle : item.style;
+            const colHex = item.styles[st]?.hex || 0x10b981;
+
+            const group = new THREE.Group();
+            group.userData = { furnitureId: id };
+
+            if (!showDone) {
+                // Unpacked Moving Boxes with Tape
+                const box1 = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.85, 0.68, 0.75),
+                    new THREE.MeshLambertMaterial({ color: 0xd97706 })
+                );
+                box1.position.y = 0.34;
+                box1.castShadow = true;
+                group.add(box1);
+
+                const tape = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.87, 0.08, 0.77),
+                    new THREE.MeshLambertMaterial({ color: 0xfef3c7 })
+                );
+                tape.position.y = 0.52;
+                group.add(tape);
+
+                group.position.set(item.pos.x, 0.06, item.pos.z);
+            } else {
+                buildCompleted3DFurniture(id, group, colHex, st);
+                group.position.set(item.pos.x, 0.06, item.pos.z);
+            }
+
+            scene.add(group);
+            furnitureMeshes[id] = group;
+        });
+    }
+
+    function buildCompleted3DFurniture(id, g, colHex, st) {
+        const matMain = new THREE.MeshLambertMaterial({ color: colHex });
+        const matWood = new THREE.MeshLambertMaterial({ color: 0x5c3a21 });
+        const matGold = new THREE.MeshLambertMaterial({ color: 0xfbbf24 });
+        const matWhite = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+        if (id === 'sofa') {
+            const seat = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.42, 1.05), matMain);
+            seat.position.y = 0.26; seat.castShadow = true; g.add(seat);
+            const chaise = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.42, 1.85), matMain);
+            chaise.position.set(0.82, 0.26, 0.4); chaise.castShadow = true; g.add(chaise);
+            const back = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.26), matMain);
+            back.position.set(0, 0.52, -0.4); back.castShadow = true; g.add(back);
+            [-0.85, 0, 0.85].forEach(px => {
+                const p = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.35, 0.16), matGold);
+                p.position.set(px, 0.62, -0.18); g.add(p);
+            });
+        } else if (id === 'tv') {
+            const stand = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.48, 0.55), matMain);
+            stand.position.y = 0.24; stand.castShadow = true; g.add(stand);
+            const fire = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.22, 0.58), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
+            fire.position.set(0, 0.24, 0.02); g.add(fire);
+            const tv = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.15, 0.09), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+            tv.position.set(0, 1.25, -0.1); tv.castShadow = true; g.add(tv);
+        } else if (id === 'rug_table') {
+            const rug = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.03, 2.0), matMain);
+            rug.position.y = 0.02; g.add(rug);
+            const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 20), matWood);
+            tbl.position.y = 0.42; tbl.castShadow = true; g.add(tbl);
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 0.4, 12), matGold);
+            leg.position.y = 0.2; g.add(leg);
+            // Cozy Floor Lamp
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 1.6, 8), matGold);
+            pole.position.set(-1.1, 0.8, -0.6); g.add(pole);
+            const shade = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.38, 12), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+            shade.position.set(-1.1, 1.65, -0.6); g.add(shade);
+        } else if (id === 'bookshelf') {
+            const unit = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.75, 1.5), matMain);
+            unit.position.y = 0.88; unit.castShadow = true; g.add(unit);
+            // Monstera Plant in Pot
+            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.18, 0.42, 12), matWhite);
+            pot.position.set(0, 0.21, 1.05); g.add(pot);
+            const bush = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), new THREE.MeshLambertMaterial({ color: 0x15803d }));
+            bush.position.set(0, 0.72, 1.05); g.add(bush);
+        } else if (id === 'window_living') {
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.4, 0.15), matWhite);
+            frame.position.y = 0.95; g.add(frame);
+            const glass = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 0.18), new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.45 }));
+            glass.position.y = 0.95; g.add(glass);
+            [-1.35, 1.35].forEach(cx => {
+                const drape = new THREE.Mesh(new THREE.BoxGeometry(0.38, 1.75, 0.22), matMain);
+                drape.position.set(cx, 0.9, 0); g.add(drape);
+            });
+        } else if (id === 'bed') {
+            const base = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.38, 2.25), matWhite);
+            base.position.y = 0.19; base.castShadow = true; g.add(base);
+            const quilt = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.24, 1.55), matMain);
+            quilt.position.set(0, 0.4, 0.32); g.add(quilt);
+            const hb = new THREE.Mesh(new THREE.BoxGeometry(1.98, 1.15, 0.22), matMain);
+            hb.position.set(0, 0.58, -1.05); hb.castShadow = true; g.add(hb);
+            [-0.48, 0.48].forEach(px => {
+                const pil = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.18, 0.42), matWhite);
+                pil.position.set(px, 0.46, -0.68); g.add(pil);
+            });
+        } else if (id === 'wardrobe') {
+            const cab = new THREE.Mesh(new THREE.BoxGeometry(1.45, 1.85, 0.58), matMain);
+            cab.position.y = 0.92; cab.castShadow = true; g.add(cab);
+            const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.55, 0.61), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+            mirror.position.y = 0.92; g.add(mirror);
+        } else if (id === 'cattree') {
+            const base = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.12, 0.85), matMain);
+            base.position.y = 0.06; g.add(base);
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 1.45, 10), matWood);
+            post.position.y = 0.75; g.add(post);
+            const house = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.52, 0.62), matMain);
+            house.position.y = 0.45; house.castShadow = true; g.add(house);
+            const topBed = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.34, 0.14, 14), matMain);
+            topBed.position.y = 1.48; g.add(topBed);
+            // Baloo & Bagheera Food Bowls
+            const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.08, 12), new THREE.MeshLambertMaterial({ color: 0x38bdf8 }));
+            b1.position.set(0.58, 0.04, 0.2); g.add(b1);
+            const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.08, 12), new THREE.MeshLambertMaterial({ color: 0xf43f5e }));
+            b2.position.set(0.58, 0.04, -0.2); g.add(b2);
+        } else if (id === 'kitchen') {
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.82, 0.68), matMain);
+            counter.position.y = 0.41; counter.castShadow = true; g.add(counter);
+            const top = new THREE.Mesh(new THREE.BoxGeometry(2.86, 0.08, 0.72), matWhite);
+            top.position.y = 0.85; g.add(top);
+            const fridge = new THREE.Mesh(new THREE.BoxGeometry(0.78, 1.78, 0.74), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+            fridge.position.set(-1.75, 0.89, 0); fridge.castShadow = true; g.add(fridge);
+        } else if (id === 'dining') {
+            const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.88, 0.08, 22), matWhite);
+            tbl.position.y = 0.74; tbl.castShadow = true; g.add(tbl);
+            const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.32, 0.72, 12), matWood);
+            ped.position.y = 0.36; g.add(ped);
+            // Blue Tray with Belgian Waffles & Ice Cream + Tatar Teapot
+            const tray = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.05, 0.4), matMain);
+            tray.position.set(-0.15, 0.8, 0); g.add(tray);
+            const scoop1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshLambertMaterial({ color: 0xbef264 }));
+            scoop1.position.set(-0.2, 0.88, 0); g.add(scoop1);
+            const scoop2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshLambertMaterial({ color: 0xfed7aa }));
+            scoop2.position.set(-0.08, 0.88, 0); g.add(scoop2);
+            const teapot = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 10), new THREE.MeshLambertMaterial({ color: 0x10b981 }));
+            teapot.position.set(0.28, 0.88, 0.1); g.add(teapot);
+        } else if (id === 'balcony') {
+            const rug = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.04, 1.0), matMain);
+            rug.position.y = 0.02; g.add(rug);
+            const chair = new THREE.Mesh(new THREE.SphereGeometry(0.52, 12, 12), matWood);
+            chair.position.set(-0.6, 0.58, 0); chair.castShadow = true; g.add(chair);
+            const cushion = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), matMain);
+            cushion.position.set(-0.55, 0.55, 0.08); g.add(cushion);
+        } else if (id === 'bath') {
+            const tub = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.62, 1.75), matWhite);
+            tub.position.set(-0.1, 0.31, 0.1); tub.castShadow = true; g.add(tub);
+            const water = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.08, 1.55), matMain);
+            water.position.set(-0.1, 0.58, 0.1); g.add(water);
+            // Washer in Room #5
+            const washer = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.85, 0.65), matWhite);
+            washer.position.set(2.1, 0.42, -0.2); washer.castShadow = true; g.add(washer);
+        } else if (id === 'toilet') {
+            const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.2, 0.44, 14), matWhite);
+            bowl.position.y = 0.22; g.add(bowl);
+            const tank = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.48, 0.22), matMain);
+            tank.position.set(0, 0.58, -0.18); g.add(tank);
+        } else if (id === 'hallway') {
+            const bench = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.44, 0.52), matMain);
+            bench.position.set(0, 0.22, -0.45); bench.castShadow = true; g.add(bench);
+            const runner1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.03, 0.85), matMain);
+            runner1.position.set(0.3, 0.02, 0.15); g.add(runner1);
+            const runner2 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.03, 0.8), matMain);
+            runner2.position.set(4.5, 0.02, 0.0); g.add(runner2);
+        }
+    }
+
+    /*************************************************************************
+     * 8. DOORWAY PATHFINDING FOR DARINA AND CATS (ZERO WALL CLIPPING!)
+     *************************************************************************/
+    function getRoomNumberAt3D(x, z) {
+        if (z < -2.0) {
+            if (x < -2.5) return 7; // Bathroom
+            if (x < -1.2) return 5; // Storage
+            return 6;               // Toilet
+        }
+        if (x < -1.2) {
+            if (z < -0.2) return 4; // Hallway #4
+            return 3;               // Kitchen #3
+        }
+        if (x < 2.2) {
+            if (z < -0.4) return 8; // Corridor #8
+            return 2;               // Bedroom #2
+        }
+        return 1;                   // Living Room #1
+    }
+
+    // Shared doorway pathfinding used by BOTH Darina AND Baloo/Bagheera so nobody ever walks through walls!
+    function buildDoorwayPath3D(sx, sz, ex, ez) {
+        const sr = getRoomNumberAt3D(sx, sz);
+        const er = getRoomNumberAt3D(ex, ez);
+        if (sr === er) return [{ x: ex, z: ez }];
+
+        const P_KITCHEN_HALL = { x: -4.75, z: -0.2 };
+        const P_BATH_HALL    = { x: -3.6,  z: -2.0 };
+        const P_STOR_HALL    = { x: -1.85, z: -2.0 };
+        const P_HALL_CORR    = { x: -1.2,  z: -1.1 };
+        const P_TOILET_CORR  = { x: -0.58, z: -2.0 };
+        const P_BED_CORR     = { x: -0.18, z: -0.4 };
+        const P_LIVING_CORR  = { x:  2.2,  z: -1.15 };
+
+        const wps = [];
+        let curHub = sr;
+
+        if (sr === 3) { wps.push(P_KITCHEN_HALL, { x: -3.6, z: -1.1 }); curHub = 4; }
+        else if (sr === 7) { wps.push(P_BATH_HALL, { x: -3.6, z: -1.1 }); curHub = 4; }
+        else if (sr === 5) { wps.push(P_STOR_HALL, { x: -1.85, z: -1.1 }); curHub = 4; }
+        else if (sr === 6) { wps.push(P_TOILET_CORR, { x: -0.2, z: -1.15 }); curHub = 8; }
+        else if (sr === 2) { wps.push(P_BED_CORR, { x: 0.2, z: -1.15 }); curHub = 8; }
+        else if (sr === 1) { wps.push(P_LIVING_CORR, { x: 1.0, z: -1.15 }); curHub = 8; }
+
+        const targetHub = (er === 3 || er === 7 || er === 5 || er === 4) ? 4 : 8;
+        if (curHub === 4 && targetHub === 8) {
+            wps.push(P_HALL_CORR, { x: 0.2, z: -1.15 });
+        } else if (curHub === 8 && targetHub === 4) {
+            wps.push(P_HALL_CORR, { x: -2.8, z: -1.1 });
+        }
+
+        if (er === 3) wps.push({ x: -4.75, z: -1.0 }, P_KITCHEN_HALL);
+        else if (er === 7) wps.push({ x: -3.6, z: -1.3 }, P_BATH_HALL);
+        else if (er === 5) wps.push({ x: -1.85, z: -1.3 }, P_STOR_HALL);
+        else if (er === 6) wps.push({ x: -0.58, z: -1.3 }, P_TOILET_CORR);
+        else if (er === 2) wps.push({ x: -0.18, z: -1.15 }, P_BED_CORR);
+        else if (er === 1) wps.push({ x: 1.2, z: -1.15 }, P_LIVING_CORR);
+
+        wps.push({ x: ex, z: ez });
+        return wps;
+    }
+
+    /*************************************************************************
+     * 9. 3D HIERARCHICAL DARINA + BALOO & BAGHEERA WITH FLOATING SPEECH BUBBLES
+     *************************************************************************/
+    const darina3D = {
+        group: null,
+        leftLegPivot: null,
+        rightLegPivot: null,
+        leftArmPivot: null,
+        rightArmPivot: null,
+        x: 3.6, z: 1.8,
+        rotY: 0,
+        walking: false,
+        walkPhase: 0,
+        pathQueue: [],
+        bubbleText: '',
+        bubbleTimer: 0
+    };
+
+    //Safe interior waypoints inside rooms so cats stroll naturally through doors and NEVER touch walls
+    const SAFE_CAT_SPOTS = [
+        { x: 3.8, z: 2.6, room: 1 },
+        { x: 5.2, z: 0.6, room: 1 },
+        { x: 3.4, z: -0.4, room: 1 },
+        { x: 0.2, z: 2.8, room: 2 },
+        { x: -0.3, z: 0.8, room: 2 },
+        { x: -3.6, z: 2.2, room: 3 },
+        { x: -5.0, z: 1.4, room: 3 },
+        { x: -2.8, z: -1.1, room: 4 },
+        { x: 0.5, z: -1.15, room: 8 }
+    ];
+
+    const CAT_RANDOM_PHRASES = {
+        baloo: [
+            'Мяу, хочу есть! 🍗',
+            'Мурр... как тепло дома! 💚',
+            'На улице -42°C, я под плед!',
+            'Пахнет вафлями со сливками? 🧇',
+            'Дарина навела идеальный порядок!',
+            'Багира опять заняла мою лежанку!'
+        ],
+        bagheera: [
+            'Мяу! Хочу вкусняшку! 🐟',
+            'Я чёрная пантера этой двушки! 💛',
+            'Мурр, какой мягкий ковёр!',
+            'Пойду проверю порядок на кухне!',
+            'Снег за окном падает, а нам уютно!',
+            'Погладь меня скорее! 🐾'
+        ]
+    };
+
+    const DARINA_AUTONOMOUS_LINES = [
+        '«Люблю, когда каждая вещь лежит строго на своём месте!»',
+        '«За окном ГРЭС парит на морозе, а у нас дома тепло и пахнет чаем!»',
+        '«Балу и Багира — наши главные пушистые ревизоры!»',
+        '«Сейчас ещё пару звёзд заработаем — и купим обновку в квартиру!»'
+    ];
+
+    const cats3D = [
+        {
+            id: 'baloo', name: 'Балу', isRussianBlue: true,
+            group: null, x: 3.5, z: 2.7, rotY: 0.5,
+            walkPhase: 0, pauseTimer: 260,
+            pathQueue: [],
+            bubbleText: 'Мурр! Наш тёплый дом! 💚', bubbleTimer: 210
+        },
+        {
+            id: 'bagheera', name: 'Багира', isRussianBlue: false,
+            group: null, x: 0.1, z: 2.7, rotY: -0.5,
+            walkPhase: 0, pauseTimer: 340,
+            pathQueue: [],
+            bubbleText: 'Мяу, хочу есть! 🍗', bubbleTimer: 240
+        }
+    ];
+
+    function buildActors3D() {
+        // 1. Hierarchical 3D Model of Darina
+        const dGroup = new THREE.Group();
+
+        const skinMat  = new THREE.MeshLambertMaterial({ color: 0xf5cba7 });
+        const hairMat  = new THREE.MeshLambertMaterial({ color: 0x2c1810 });
+        const shirtMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const jeansMat = new THREE.MeshLambertMaterial({ color: 0x1d4ed8 });
+
+        // Pelvis Bridge
+        const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.19, 0.22, 12), jeansMat);
+        pelvis.position.y = 0.62;
+        dGroup.add(pelvis);
+
+        // Left & Right Leg Pivots at Hip Socket (y = 0.58) - Impossible to detach!
+        const leftLegPivot = new THREE.Group();
+        leftLegPivot.position.set(-0.09, 0.58, 0);
+        const lLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.54, 10), jeansMat);
+        lLeg.position.y = -0.27;
+        const lShoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.09, 0.22), shirtMat);
+        lShoe.position.set(0, -0.53, 0.04);
+        leftLegPivot.add(lLeg, lShoe);
+        dGroup.add(leftLegPivot);
+
+        const rightLegPivot = new THREE.Group();
+        rightLegPivot.position.set(0.09, 0.58, 0);
+        const rLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.54, 10), jeansMat);
+        rLeg.position.y = -0.27;
+        const rShoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.09, 0.22), shirtMat);
+        rShoe.position.set(0, -0.53, 0.04);
+        rightLegPivot.add(rLeg, rShoe);
+        dGroup.add(rightLegPivot);
+
+        // White T-Shirt Torso
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.18, 0.5, 12), shirtMat);
+        torso.position.y = 0.92;
+        torso.castShadow = true;
+        dGroup.add(torso);
+
+        // Left & Right Arm Pivots at Shoulder Socket (y = 1.12)
+        const leftArmPivot = new THREE.Group();
+        leftArmPivot.position.set(-0.24, 1.12, 0);
+        const lArm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.42, 8), skinMat);
+        lArm.position.y = -0.2;
+        leftArmPivot.add(lArm);
+        dGroup.add(leftArmPivot);
+
+        const rightArmPivot = new THREE.Group();
+        rightArmPivot.position.set(0.24, 1.12, 0);
+        const rArm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.42, 8), skinMat);
+        rArm.position.y = -0.2;
+        const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.24, 0.03), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
+        tablet.position.set(0.04, -0.36, 0.08);
+        rightArmPivot.add(rArm, tablet);
+        dGroup.add(rightArmPivot);
+
+        // Head, Dark Brown Wavy Tatar Hair & Sunglasses Perched on Top
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 14), skinMat);
+        head.position.y = 1.36;
+        head.castShadow = true;
+        dGroup.add(head);
+
+        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.23, 12, 12), hairMat);
+        hairBack.position.set(0, 1.38, -0.05);
+        hairBack.scale.set(1.05, 1.25, 1.05);
+        dGroup.add(hairBack);
+
+        // Sunglasses on top of head (like Darina's photo)
+        const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.07, 0.12), new THREE.MeshLambertMaterial({ color: 0x111827 }));
+        glasses.position.set(0, 1.56, 0.08);
+        dGroup.add(glasses);
+
+        dGroup.position.set(darina3D.x, 0.06, darina3D.z);
+        scene.add(dGroup);
+
+        darina3D.group = dGroup;
+        darina3D.leftLegPivot = leftLegPivot;
+        darina3D.rightLegPivot = rightLegPivot;
+        darina3D.leftArmPivot = leftArmPivot;
+        darina3D.rightArmPivot = rightArmPivot;
+
+        // 2. Build 3D Cats: Baloo (Russian Blue) & Bagheera (Sleek Black Cat)
+        cats3D.forEach(cat => {
+            const cGroup = new THREE.Group();
+            const furMat = new THREE.MeshLambertMaterial({ color: cat.isRussianBlue ? 0x64748b : 0x18181b });
+            const eyeMat = new THREE.MeshBasicMaterial({ color: cat.isRussianBlue ? 0x10b981 : 0xfbbf24 });
+
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.2, 0.44), furMat);
+            body.position.y = 0.2;
+            body.castShadow = true;
+            cGroup.add(body);
+
+            const cHead = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 10), furMat);
+            cHead.position.set(0, 0.32, 0.22);
+            cGroup.add(cHead);
+
+            // Ears
+            [-0.08, 0.08].forEach(ex => {
+                const ear = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.11, 4), furMat);
+                ear.position.set(ex, 0.44, 0.22);
+                cGroup.add(ear);
+                const eye = new THREE.Mesh(new THREE.SphereGeometry(0.026, 6, 6), eyeMat);
+                eye.position.set(ex * 0.7, 0.34, 0.34);
+                cGroup.add(eye);
+            });
+
+            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.32, 6), furMat);
+            tail.position.set(0, 0.32, -0.24);
+            tail.rotation.x = -0.6;
+            cGroup.add(tail);
+
+            cGroup.position.set(cat.x, 0.06, cat.z);
+            scene.add(cGroup);
+            cat.group = cGroup;
+        });
+    }
+
+    /*************************************************************************
+     * 10. VIEWPORT CAMERA ORBIT, FLOOR RAYCASTING & CALM WALKING LOOP
+     *************************************************************************/
+    function setupViewportInteractions(container) {
+        let isDragging = false;
+        let startPt = { x: 0, y: 0 };
+        let startTarget = new THREE.Vector3();
+        let downTime = 0;
+
+        container.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            const lp = getLogicalPoint(e.clientX, e.clientY);
+            startPt = { x: lp.x, y: lp.y };
+            startTarget.copy(camDesiredTarget);
+            downTime = Date.now();
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const lp = getLogicalPoint(e.clientX, e.clientY);
+            const dx = (lp.x - startPt.x) * 0.014;
+            const dy = (lp.y - startPt.y) * 0.014;
+
+            const cosA = Math.cos(camAngle);
+            const sinA = Math.sin(camAngle);
+            camDesiredTarget.x = Math.max(-6.5, Math.min(6.5, startTarget.x - (dx * cosA + dy * sinA)));
+            camDesiredTarget.z = Math.max(-4.5, Math.min(5.5, startTarget.z - (dy * cosA - dx * sinA)));
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const lp = getLogicalPoint(e.clientX, e.clientY);
+            const dist = Math.hypot(lp.x - startPt.x, lp.y - startPt.y);
+            const elapsed = Date.now() - downTime;
+
+            if (dist < 12 && elapsed < 320) {
+                const ndcX = (lp.x / lp.w) * 2 - 1;
+                const ndcY = -(lp.y / lp.h) * 2 + 1;
+                raycaster.setFromCamera({ x: ndcX, y: ndcY }, camera);
+
+                const hits = raycaster.intersectObjects(clickableFloorObjects, false);
+                if (hits.length > 0) {
+                    const pt = hits[0].point;
+                    playSound('tap');
+                    commandDarinaWalkTo3D(pt.x, pt.z);
+                }
+            }
+        });
+    }
+
+    function rotateCameraBy(deltaRad) {
+        playSound('tap');
+        camDesiredAngle += deltaRad;
+    }
+
+    function focusBtiRoom(roomNum) {
+        playSound('tap');
+        const presets = {
+            0: { x: 0.3,  z: 0.8,  dist: 16.5, h: 13.8, walk: null, msg: '«Панорама всей нашей 3D-двушки и зимнего Нерюнгри с ГРЭС на горизонте!»' },
+            1: { x: 4.4,  z: 1.4,  dist: 10.5, h: 9.2,  walk: { x: 4.0, z: 1.8 }, msg: '«Зал №1 (17,4 м²) — сердце нашей квартиры!»' },
+            2: { x: 0.4,  z: 1.8,  dist: 10.0, h: 8.8,  walk: { x: 0.2, z: 1.2 }, msg: '«Спальня №2 (10,5 м²) — уют и покой!»' },
+            3: { x: -3.8, z: 2.2,  dist: 10.5, h: 9.2,  walk: { x: -3.8, z: 1.8 }, msg: '«Кухня №3 (10,4 м²) с тёплым балконом и ароматом вафель!»' },
+            7: { x: -2.5, z: -2.2, dist: 10.5, h: 9.2,  walk: { x: -3.2, z: -1.2 }, msg: '«Ванная №7, Санузел №6 и Прихожая №4!»' }
+        };
+        const p = presets[roomNum] || presets[0];
+        camDesiredTarget.set(p.x, 0, p.z);
+        camDesiredDist = p.dist;
+        camDesiredHeight = p.h;
+        if (p.walk) commandDarinaWalkTo3D(p.walk.x, p.walk.z);
+        sayDarina(p.msg);
+    }
+
+    function commandDarinaWalkTo3D(tx, tz) {
+        const cx = Math.max(-5.8, Math.min(6.0, tx));
+        const cz = Math.max(-4.0, Math.min(5.2, tz));
+        darina3D.pathQueue = buildDoorwayPath3D(darina3D.x, darina3D.z, cx, cz);
+
+        if (targetRingMesh) {
+            targetRingMesh.position.set(cx, 0.08, cz);
+            targetRingMesh.visible = true;
+            setTimeout(() => { if (targetRingMesh) targetRingMesh.visible = false; }, 900);
+        }
+    }
+
+    function project3DToScreen(vec3) {
+        const v = vec3.clone().project(camera);
+        const lp = getLogicalPoint(0, 0);
+        return {
+            x: (v.x * 0.5 + 0.5) * lp.w,
+            y: (-(v.y * 0.5) + 0.5) * lp.h,
+            visible: v.z < 1
+        };
+    }
+
+    let lastFrameTime = performance.now();
+    let darinaIdleThoughtTimer = 420;
+
+    function animateThreeJSWorld(now) {
+        requestAnimationFrame(animateThreeJSWorld);
+        if (!sceneReady) return;
+
+        const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+        lastFrameTime = now;
+
+        // 1. Smooth Camera Interpolation
+        camTarget.lerp(camDesiredTarget, 0.1);
+        camAngle += (camDesiredAngle - camAngle) * 0.1;
+        camDist += (camDesiredDist - camDist) * 0.1;
+        camHeight += (camDesiredHeight - camHeight) * 0.1;
+
+        camera.position.set(
+            camTarget.x + Math.sin(camAngle) * camDist,
+            camHeight,
+            camTarget.z + Math.cos(camAngle) * camDist
+        );
+        camera.lookAt(camTarget);
+
+        // 2. Animate Neryungri City Background (ГРЭС Steam, Pedestrians, Cars, Snow)
+        gresSteamPuffs.forEach(p => {
+            p.offset = (p.offset + dt * 0.22) % 1;
+            p.mesh.position.y = p.baseY + p.offset * 6.5;
+            p.mesh.position.x = p.baseX + Math.sin(now * 0.001 + p.offset * 5) * 0.65;
+            const sc = 0.7 + p.offset * 1.45;
+            p.mesh.scale.set(sc, sc, sc);
+            p.mesh.material.opacity = (1 - p.offset) * 0.65;
+        });
+
+        cityPedestrians.forEach(ped => {
+            ped.group.position.x += ped.dir * ped.speed * dt;
+            ped.group.position.y = -0.05 + Math.abs(Math.sin(now * 0.005 + ped.phase)) * 0.06;
+            if (ped.group.position.x > 16) ped.dir = -1;
+            if (ped.group.position.x < -16) ped.dir = 1;
+        });
+
+        cityCars.forEach(car => {
+            car.group.position.x += car.dir * car.speed * dt;
+            if (car.dir > 0 && car.group.position.x > 18) car.group.position.x = -18;
+            if (car.dir < 0 && car.group.position.x < -18) car.group.position.x = 18;
+        });
+
+        if (snowSystem) {
+            const posAttr = snowSystem.geometry.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                let y = posAttr.getY(i) - dt * 1.35;
+                if (y < 0) y = 15.5;
+                posAttr.setY(i, y);
+            }
+            posAttr.needsUpdate = true;
+        }
+
+        // 3. Calm, Graceful Walking Speed for Darina (Only when user commands!)
+        if (darina3D.pathQueue.length > 0) {
+            const wp = darina3D.pathQueue[0];
+            const dx = wp.x - darina3D.x;
+            const dz = wp.z - darina3D.z;
+            const dist = Math.hypot(dx, dz);
+
+            // Calm human walking speed: 2.35 units/sec (Previously was much faster)
+            const walkSpeed = 2.35;
+            if (dist > 0.08) {
+                darina3D.walking = true;
+                darina3D.walkPhase += dt * 7.2;
+                darina3D.x += (dx / dist) * Math.min(dist, walkSpeed * dt);
+                darina3D.z += (dz / dist) * Math.min(dist, walkSpeed * dt);
+                darina3D.rotY = Math.atan2(dx, dz);
+            } else {
+                darina3D.x = wp.x;
+                darina3D.z = wp.z;
+                darina3D.pathQueue.shift();
+                if (darina3D.pathQueue.length === 0) {
+                    darina3D.walking = false;
+                    darina3D.walkPhase = 0;
+                }
+            }
+        } else {
+            darina3D.walking = false;
+            darina3D.walkPhase = 0;
+        }
+
+        if (darina3D.group) {
+            darina3D.group.position.set(darina3D.x, 0.06, darina3D.z);
+            darina3D.group.rotation.y = darina3D.rotY;
+            const swing = darina3D.walking ? Math.sin(darina3D.walkPhase) * 0.48 : 0;
+            darina3D.leftLegPivot.rotation.x = swing;
+            darina3D.rightLegPivot.rotation.x = -swing;
+            darina3D.leftArmPivot.rotation.x = -swing * 0.7;
+            darina3D.rightArmPivot.rotation.x = swing * 0.7;
+        }
+
+        // Occasional Autonomous Thoughts over Darina
+        if (darina3D.bubbleTimer > 0) darina3D.bubbleTimer--;
+        darinaIdleThoughtTimer--;
+        if (darinaIdleThoughtTimer <= 0) {
+            darinaIdleThoughtTimer = 520 + Math.floor(Math.random() * 260);
+            darina3D.bubbleText = DARINA_AUTONOMOUS_LINES[Math.floor(Math.random() * DARINA_AUTONOMOUS_LINES.length)];
+            darina3D.bubbleTimer = 210;
+        }
+
+        // 4. Slow, Doorway-Aware Movement for Baloo & Bagheera (NEVER walks through walls!)
+        cats3D.forEach(cat => {
+            if (cat.bubbleTimer > 0) cat.bubbleTimer--;
+
+            if (cat.pathQueue.length > 0) {
+                const wp = cat.pathQueue[0];
+                const dx = wp.x - cat.x;
+                const dz = wp.z - cat.z;
+                const dist = Math.hypot(dx, dz);
+                // Slow, relaxed cat stroll: 0.92 units/sec
+                const catSpeed = 0.92;
+
+                if (dist > 0.07) {
+                    cat.walkPhase += dt * 6.5;
+                    cat.x += (dx / dist) * Math.min(dist, catSpeed * dt);
+                    cat.z += (dz / dist) * Math.min(dist, catSpeed * dt);
+                    cat.rotY = Math.atan2(dx, dz);
+                } else {
+                    cat.x = wp.x;
+                    cat.z = wp.z;
+                    cat.pathQueue.shift();
+                }
+            } else {
+                cat.walkPhase = 0;
+                cat.pauseTimer--;
+                if (cat.pauseTimer <= 0) {
+                    // Long natural cat pause (7-12 seconds)
+                    cat.pauseTimer = 380 + Math.floor(Math.random() * 340);
+                    const spot = SAFE_CAT_SPOTS[Math.floor(Math.random() * SAFE_CAT_SPOTS.length)];
+                    cat.pathQueue = buildDoorwayPath3D(cat.x, cat.z, spot.x, spot.z);
+
+                    // 65% chance to pop a cute random speech bubble ("Мяу, хочу есть!", etc.)
+                    if (Math.random() < 0.65) {
+                        const pool = CAT_RANDOM_PHRASES[cat.id];
+                        cat.bubbleText = pool[Math.floor(Math.random() * pool.length)];
+                        cat.bubbleTimer = 230;
+                    }
+                }
+            }
+
+            if (cat.group) {
+                const hopY = cat.pathQueue.length > 0 ? Math.abs(Math.sin(cat.walkPhase)) * 0.04 : 0;
+                cat.group.position.set(cat.x, 0.06 + hopY, cat.z);
+                cat.group.rotation.y = cat.rotY;
+            }
+        });
+
+        renderer.render(scene, camera);
+        update3DOverlayPinsAndBubbles();
+    }
+
+    function update3DOverlayPinsAndBubbles() {
+        // 1. Update Floating Furniture Pins
+        Object.values(FURNITURE_DATA).forEach(item => {
+            const pinEl = document.getElementById(`pin-3d-${item.id}`);
+            if (!pinEl) return;
+            if (item.completed || editingSpotId) {
+                pinEl.style.display = 'none';
+                return;
+            }
+            const worldPos = new THREE.Vector3(item.pos.x, 1.35, item.pos.z);
+            const scr = project3DToScreen(worldPos);
+            if (!scr.visible) {
+                pinEl.style.display = 'none';
+                return;
+            }
+            pinEl.style.display = 'flex';
+            pinEl.style.left = `${scr.x.toFixed(1)}px`;
+            pinEl.style.top = `${scr.y.toFixed(1)}px`;
+        });
+
+        // 2. Update Live Speech Bubbles Above Baloo, Bagheera & Darina
+        const bubbleContainer = document.getElementById('overlay-3d-bubbles');
+        let html = '';
+
+        cats3D.forEach(cat => {
+            const scr = project3DToScreen(new THREE.Vector3(cat.x, 0.95, cat.z));
+            if (scr.visible) {
+                const borderCol = cat.isRussianBlue ? 'border-cyan-400' : 'border-amber-400';
+                html += `
+                    <div class="actor-bubble-3d flex flex-col items-center" style="left:${scr.x.toFixed(1)}px; top:${scr.y.toFixed(1)}px;">
+                        ${cat.bubbleTimer > 0 ? `
+                            <div class="bg-white/95 text-slate-900 border-2 ${borderCol} px-2.5 py-0.5 rounded-2xl text-[10px] font-black shadow-lg mb-0.5 whitespace-nowrap">
+                                ${cat.bubbleText}
+                            </div>
+                        ` : ''}
+                        <span class="bg-slate-900/85 text-white border ${borderCol} px-2 py-0.2 rounded-full text-[9px] font-black">
+                            🐾 ${cat.name}
+                        </span>
+                    </div>
+                `;
+            }
+        });
+
+        if (darina3D.bubbleTimer > 0) {
+            const dScr = project3DToScreen(new THREE.Vector3(darina3D.x, 2.05, darina3D.z));
+            if (dScr.visible) {
+                html += `
+                    <div class="actor-bubble-3d" style="left:${dScr.x.toFixed(1)}px; top:${dScr.y.toFixed(1)}px;">
+                        <div class="bg-pink-600/95 text-white border-2 border-amber-300 px-2.5 py-1 rounded-2xl text-[10px] font-black shadow-lg max-w-[210px] text-center leading-tight">
+                            ${darina3D.bubbleText}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        bubbleContainer.innerHTML = html;
+    }
+
+    function createInitialPinDOMElements() {
+        const container = document.getElementById('overlay-3d-pins');
+        container.innerHTML = '';
+        Object.values(FURNITURE_DATA).forEach(item => {
+            const btn = document.createElement('button');
+            btn.id = `pin-3d-${item.id}`;
+            btn.className = 'pin-3d hs-btn-green px-2.5 py-1 rounded-full text-white font-black text-[10.5px] flex items-center gap-1 shadow-xl';
+            btn.innerHTML = `<span>⭐ ${item.cost}</span>`;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                onTapFurnitureZone(item.id);
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    /*************************************************************************
+     * 11. FURNITURE UNLOCKING, STORY MILESTONES & UI DIALOGUES
+     *************************************************************************/
+    let editingSpotId = null;
+    let previewStyle = 0;
+
+    function updateApartmentHUD() {
+        document.getElementById('hud-stars').textContent = stars;
+        document.getElementById('modal-stars-count').textContent = stars;
+        document.getElementById('hud-coins').textContent = coins;
+        document.getElementById('hud-level-num').textContent = currentLevel;
+
+        const allItems = Object.values(FURNITURE_DATA);
+        const doneCount = allItems.filter(i => i.completed).length;
+        const total = allItems.length;
+
+        document.getElementById('hud-progress-txt').textContent = `${doneCount}/${total}`;
+        document.getElementById('hud-progress-bar').style.width = `${Math.round((doneCount / total) * 100)}%`;
+
+        // Check Story Chapter Progression
+        let activeChap = 1;
+        STORY_CHAPTERS.forEach(ch => {
+            if (doneCount >= ch.reqCount) activeChap = ch.chapter;
+        });
+        document.getElementById('hud-chapter-label').textContent = `Глава ${activeChap}`;
+
+        if (activeChap > currentChapter) {
+            currentChapter = activeChap;
+            openStoryModal(currentChapter);
+        }
+
+        const rem = total - doneCount;
+        const badge = document.getElementById('tablet-badge');
+        badge.textContent = rem;
+        badge.style.display = rem === 0 ? 'none' : 'inline-block';
+    }
+
+    function onTapFurnitureZone(spotId) {
+        const item = FURNITURE_DATA[spotId];
+        if (!item) return;
+        playSound('tap');
+
+        commandDarinaWalkTo3D(item.walk.x, item.walk.z);
+        camDesiredTarget.set(item.pos.x, 0, item.pos.z);
+
+        if (!item.completed && stars < item.cost) {
+            sayDarina(`«Для зоны «${item.title}» нужно ⭐ ${item.cost} (у нас сейчас ⭐ ${stars}). Пошли сыграем уровень Три в ряд!»`);
+            darina3D.bubbleText = `Нужно ещё ${item.cost - stars} ⭐!`;
+            darina3D.bubbleTimer = 180;
+            return;
+        }
+        openStyleSelectorDock(spotId);
+    }
+
+    function openStyleSelectorDock(spotId) {
+        const item = FURNITURE_DATA[spotId];
+        editingSpotId = spotId;
+        previewStyle = item.style || 0;
+
+        document.getElementById('apt-bottom-bar').classList.add('hidden');
+        const dock = document.getElementById('style-selector-dock');
+        dock.classList.remove('hidden');
+        dock.classList.add('flex');
+        document.getElementById('dock-item-title').textContent = item.title;
+        document.getElementById('dock-confirm-label').textContent = item.completed
+            ? '✔ Сохранить стиль'
+            : `✔ Открыть за ⭐ ${item.cost}`;
+
+        const container = document.getElementById('dock-style-cards');
+        container.innerHTML = '';
+        item.styles.forEach((st, idx) => {
+            const btn = document.createElement('button');
+            btn.className = `p-2 rounded-2xl border-2 flex items-center gap-2 transition active:scale-95 ${
+                idx === previewStyle
+                    ? 'bg-amber-400/20 border-amber-400 text-white shadow'
+                    : 'bg-slate-800/90 border-slate-700 text-slate-300'
+            }`;
+            btn.innerHTML = `
+                <span class="w-5 h-5 rounded-full border-2 border-white shrink-0" style="background:${st.color}"></span>
+                <span class="text-[11px] font-black leading-tight text-left">${st.name}</span>
+            `;
+            btn.onclick = () => {
+                playSound('tap');
+                previewStyle = idx;
+                openStyleSelectorDock(spotId);
+                rebuildAllFurnitureMeshes();
+            };
+            container.appendChild(btn);
+        });
+        rebuildAllFurnitureMeshes();
+    }
+
+    function confirmFurnitureEdit() {
+        const item = FURNITURE_DATA[editingSpotId];
+        if (!item) return;
+        if (!item.completed) {
+            if (stars < item.cost) return;
+            stars -= item.cost;
+            item.completed = true;
+        }
+        item.style = previewStyle;
+        editingSpotId = null;
+
+        playSound('fanfare');
+        document.getElementById('style-selector-dock').classList.add('hidden');
+        document.getElementById('style-selector-dock').classList.remove('flex');
+        document.getElementById('apt-bottom-bar').classList.remove('hidden');
+
+        rebuildAllFurnitureMeshes();
+        updateApartmentHUD();
+        saveGameProgress(false);
+        spawnConfetti(fxCanvas.width / 2, fxCanvas.height * 0.45, 45);
+        sayDarina(item.praise);
+    }
+
+    function cancelFurnitureEdit() {
+        editingSpotId = null;
+        document.getElementById('style-selector-dock').classList.add('hidden');
+        document.getElementById('style-selector-dock').classList.remove('flex');
+        document.getElementById('apt-bottom-bar').classList.remove('hidden');
+        rebuildAllFurnitureMeshes();
+    }
+
+    function triggerRandomFamilyDialogue() {
+        playSound('meow');
+        const c = cats3D[Math.floor(Math.random() * cats3D.length)];
+        const pool = CAT_RANDOM_PHRASES[c.id];
+        c.bubbleText = pool[Math.floor(Math.random() * pool.length)];
+        c.bubbleTimer = 240;
+
+        const lines = [
+            '«Балу просит добавки корма, а Багира греется на тёплом паркете!»',
+            '«Смотри, как красиво парит Нерюнгринская ГРЭС за окном и гуляют люди в парке!»',
+            '«В нашей двушке каждая деталь подобрана с любовью и идеальным порядком!»'
+        ];
+        sayDarina(lines[Math.floor(Math.random() * lines.length)]);
+    }
+
+    function sayDarina(text) {
+        document.getElementById('hud-dialogue').textContent = text;
+    }
+
+    function openStoryModal(chapNum = null) {
+        playSound('tap');
+        const targetChap = chapNum || currentChapter;
+        const ch = STORY_CHAPTERS.find(c => c.chapter === targetChap) || STORY_CHAPTERS[0];
+
+        document.getElementById('story-modal-title').textContent = ch.title;
+        document.getElementById('story-modal-sub').textContent = `Сюжетная глава ${ch.chapter} из 5`;
+        document.getElementById('story-modal-text').textContent = ch.text;
+        document.getElementById('story-modal-cats').textContent = ch.cats;
+
+        const list = document.getElementById('story-chapters-list');
+        list.innerHTML = '';
+        STORY_CHAPTERS.forEach(sc => {
+            const unlocked = currentChapter >= sc.chapter;
+            const b = document.createElement('button');
+            b.className = `py-1.5 rounded-xl font-black text-[10px] border ${
+                sc.chapter === ch.chapter
+                    ? 'bg-pink-600 text-white border-amber-300'
+                    : (unlocked ? 'bg-slate-700 text-amber-200 border-slate-500' : 'bg-slate-900 text-slate-500 border-slate-800')
+            }`;
+            b.textContent = `${unlocked ? '📖' : '🔒'} Гл.${sc.chapter}`;
+            if (unlocked) b.onclick = () => openStoryModal(sc.chapter);
+            list.appendChild(b);
+        });
+
+        const m = document.getElementById('modal-story');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    }
+
+    function closeStoryModal() {
+        const m = document.getElementById('modal-story');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+
+    function openBtiMapModal() {
+        playSound('tap');
+        const m = document.getElementById('modal-bti');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    }
+    function closeBtiMapModal() {
+        const m = document.getElementById('modal-bti');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+    function jumpFromBtiModal(roomNum) {
+        closeBtiMapModal();
+        focusBtiRoom(roomNum);
+    }
+
+    function openTasksModal() {
+        playSound('tap');
+        document.getElementById('modal-stars-count').textContent = stars;
+        const container = document.getElementById('tasks-list-container');
+        container.innerHTML = '';
+
+        Object.values(FURNITURE_DATA).forEach(item => {
+            const card = document.createElement('div');
+            card.className = `p-2.5 rounded-2xl border-2 flex items-center justify-between gap-2 ${
+                item.completed ? 'bg-emerald-50 border-emerald-300' : 'bg-white border-slate-200'
+            }`;
+            card.innerHTML = `
+                <div class="min-w-0">
+                    <div class="text-xs font-black text-slate-900 truncate">${item.title}</div>
+                    <p class="text-[10px] font-bold text-slate-600 leading-snug mt-0.5">${item.desc}</p>
+                </div>
+                <button class="${item.completed ? 'hs-btn-blue' : 'hs-btn-green'} px-3 py-1.5 rounded-xl text-white font-black text-xs shrink-0">
+                    ${item.completed ? 'Стиль ✏️' : `⭐ ${item.cost}`}
+                </button>
+            `;
+            card.querySelector('button').onclick = () => {
+                closeTasksModal();
+                onTapFurnitureZone(item.id);
+            };
+            container.appendChild(card);
+        });
+
+        const m = document.getElementById('modal-tasks');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    }
+
+    function closeTasksModal() {
+        const m = document.getElementById('modal-tasks');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+
+    /*************************************************************************
+     * 12. MATCH-3 ENGINE WITH PACKING CRATES (📦) & ESCALATING DIFFICULTY
+     *************************************************************************/
+    const GRID_SIZE = 7;
+    const TILE_TYPES = [
+        {
+            id: 0, name: 'Вафли', color: '#f59e0b', bg: 'bg-amber-100 border-amber-300',
+            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><rect x="6" y="10" width="32" height="24" rx="7" fill="#d97706" stroke="#78350f" stroke-width="2"/><circle cx="18" cy="20" r="6.5" fill="#bef264"/><circle cx="27" cy="20" r="6.5" fill="#fed7aa"/></svg>`
+        },
+        {
+            id: 1, name: 'Татарский чай', color: '#10b981', bg: 'bg-emerald-100 border-emerald-300',
+            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><path d="M10,16 L30,16 L27,32 Q20,36 13,32 Z" fill="#10b981" stroke="#065f46" stroke-width="2"/><path d="M30,18 Q37,18 36,24 Q35,29 28,28" fill="none" stroke="#065f46" stroke-width="2.5"/><ellipse cx="20" cy="34" rx="14" ry="3.5" fill="#fbbf24"/></svg>`
+        },
+        {
+            id: 2, name: 'Подушка', color: '#f43f5e', bg: 'bg-rose-100 border-rose-300',
+            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><rect x="7" y="9" width="30" height="26" rx="9" fill="#f43f5e" stroke="#9f1239" stroke-width="2"/><circle cx="22" cy="22" r="4" fill="#fef08a"/></svg>`
+        },
+        {
+            id: 3, name: 'Лапка', color: '#38bdf8', bg: 'bg-sky-100 border-sky-300',
+            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><ellipse cx="22" cy="26" rx="8" ry="6.5" fill="#475569"/><circle cx="13" cy="17" r="3.5" fill="#475569"/><circle cx="19" cy="14" r="3.5" fill="#475569"/><circle cx="25" cy="14" r="3.5" fill="#475569"/><circle cx="31" cy="17" r="3.5" fill="#475569"/></svg>`
+        },
+        {
+            id: 4, name: 'Очки Дарины', color: '#a855f7', bg: 'bg-purple-100 border-purple-300',
+            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><rect x="5" y="15" width="15" height="12" rx="3" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/><rect x="24" y="15" width="15" height="12" rx="3" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/><line x1="20" y1="20" x2="24" y2="20" stroke="#fbbf24" stroke-width="2.5"/></svg>`
+        }
+    ];
+
+    let grid = [];
+    let selectedCell = null;
+    let m3Busy = false;
+    let movesLeft = 18;
+    let levelGoals = {};
+    let activeBooster = null;
+    let m3DragStart = null;
+
+    function openMatch3Screen() {
+        playSound('tap');
+        cancelFurnitureEdit();
+        document.getElementById('screen-apartment').classList.add('hidden');
+        const s = document.getElementById('screen-match3');
+        s.classList.remove('hidden');
+        s.classList.add('flex');
+        initMatch3Level(currentLevel);
+    }
+
+    function closeMatch3Screen() {
+        playSound('tap');
+        const s = document.getElementById('screen-match3');
+        s.classList.add('hidden');
+        s.classList.remove('flex');
+        document.getElementById('screen-apartment').classList.remove('hidden');
+        updateApartmentHUD();
+    }
+
+    function initMatch3Level(lvl) {
+        // Tighter moves & crates on board for engaging challenge
+        movesLeft = Math.max(15, 20 - Math.floor(lvl / 3));
+        activeBooster = null;
+        document.getElementById('m3-lvl-title').textContent = lvl;
+        document.getElementById('m3-moves').textContent = movesLeft;
+        document.getElementById('cnt-hammer').textContent = boosts.hammer;
+        document.getElementById('cnt-broom').textContent = boosts.broom;
+
+        const targetCount = 14 + Math.min(lvl * 2, 16);
+        const crateCount = Math.min(4 + lvl, 11);
+        levelGoals = {
+            0: { cur: 0, max: targetCount, icon: TILE_TYPES[0].svg },
+            1: { cur: 0, max: targetCount, icon: TILE_TYPES[1].svg },
+            crate: { cur: 0, max: crateCount, icon: `<span class="text-lg">📦</span>` }
         };
 
-        const trees = [];
+        generateGridWithCrates(crateCount);
+        renderM3GoalsUI();
+        renderM3Board(true);
+    }
 
-        function init() {
-            // Create trees and fires
-            for (let i = 0; i < 150; i++) {
-                const treeContainer = document.createElement('div');
-                treeContainer.classList.add('tree-container');
+    function renderM3GoalsUI() {
+        const container = document.getElementById('m3-goals');
+        container.innerHTML = '';
+        Object.keys(levelGoals).forEach(k => {
+            const g = levelGoals[k];
+            const rem = Math.max(0, g.max - g.cur);
+            const badge = document.createElement('div');
+            badge.className = `relative w-8 h-8 rounded-xl border-2 flex items-center justify-center shadow ${
+                rem === 0 ? 'bg-emerald-500 border-white' : 'bg-slate-800 border-amber-200'
+            }`;
+            badge.innerHTML = `
+                ${g.icon}
+                <span class="absolute -bottom-1 -right-1 px-1 rounded-full text-[9px] font-black border border-white ${
+                    rem === 0 ? 'bg-emerald-700 text-white' : 'bg-rose-600 text-white'
+                }">${rem === 0 ? '✓' : rem}</span>
+            `;
+            container.appendChild(badge);
+        });
+    }
 
-                const fire = document.createElement('img');
-                fire.src = 'assets/fire.png';
-                fire.classList.add('fire');
-                fire.style.display = 'none';
-                treeContainer.appendChild(fire);
-
-                const tree = document.createElement('img');
-                tree.src = 'assets/tree.png';
-                tree.dataset.status = 'green';
-                treeContainer.appendChild(tree);
-
-                treeContainer.addEventListener('click', () => {
-                    if (tree.dataset.status === 'burning') {
-                        useTool(tree);
-                    }
-                });
-
-                trees.push(tree);
-                gameBoard.appendChild(treeContainer);
+    function generateGridWithCrates(crateCount) {
+        grid = [];
+        for (let r = 0; r < GRID_SIZE; r++) {
+            grid[r] = [];
+            for (let c = 0; c < GRID_SIZE; c++) {
+                let t;
+                do {
+                    t = Math.floor(Math.random() * TILE_TYPES.length);
+                } while (
+                    (c >= 2 && grid[r][c - 1].type === t && grid[r][c - 2].type === t) ||
+                    (r >= 2 && grid[r - 1][c].type === t && grid[r - 2][c].type === t)
+                );
+                grid[r][c] = { type: t, power: null, crate: false, isNew: false };
             }
-
-            setInterval(updateLevelTime, 1000);
-            setInterval(startFire, 5000);
-            setInterval(updateNews, 10000);
         }
 
-        function useTool(tree) {
-            if (selectedTool && selectedTool.uses > 0) {
-                selectedTool.uses--;
-                selectedTool.countElement.textContent = selectedTool.uses;
-                tree.dataset.status = 'burned';
-                tree.src = 'assets/burnedTree.png';
-                tree.previousSibling.style.display = 'none'; // Hide fire
-                firesExtinguished++;
-                budget += 5000;
-                budgetElement.textContent = budget;
-                updateBudgetTooltip();
+        // Place unpacking crates 📦 on the board
+        let placed = 0;
+        while (placed < crateCount) {
+            const rr = 1 + Math.floor(Math.random() * (GRID_SIZE - 2));
+            const cc = 1 + Math.floor(Math.random() * (GRID_SIZE - 2));
+            if (!grid[rr][cc].crate) {
+                grid[rr][cc].crate = true;
+                placed++;
+            }
+        }
+    }
 
-                if (selectedTool === tools.helicopter) {
-                    for (let i = 0; i < 9; i++) {
-                        const burningTrees = trees.filter(tree => tree.dataset.status === 'burning');
-                        if (burningTrees.length > 0) {
-                            const randomTree = burningTrees[Math.floor(Math.random() * burningTrees.length)];
-                            randomTree.dataset.status = 'burned';
-                            randomTree.src = 'assets/burnedTree.png';
-                            randomTree.previousSibling.style.display = 'none'; // Hide fire
-                            firesExtinguished++;
-                            budget += 5000;
-                            budgetElement.textContent = budget;
-                            updateBudgetTooltip();
-                        }
-                    }
+    function renderM3Board(animateDrop = false) {
+        const board = document.getElementById('match3-grid');
+        board.innerHTML = '';
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                const cell = grid[r][c];
+                const meta = TILE_TYPES[cell.type];
+                const el = document.createElement('div');
+                el.id = `cell-${r}-${c}`;
+
+                if (cell.crate) {
+                    el.className = `m3-tile border-b-2 bg-amber-700 border-amber-900`;
+                    el.innerHTML = `<span class="text-lg">📦</span>`;
+                } else {
+                    el.className = `m3-tile border-b-2 ${meta.bg} ${(animateDrop || cell.isNew) ? 'tile-drop' : ''}`;
+                    el.innerHTML = meta.svg;
+                }
+                cell.isNew = false;
+
+                if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
+                    el.classList.add('selected');
                 }
 
-                if (selectedTool.uses === 0) {
-                    selectedTool.element.classList.add('cooldown');
-                    setTimeout(() => {
-                        selectedTool.uses = selectedTool === tools.helicopter ? 3 : 20;
-                        selectedTool.countElement.textContent = selectedTool.uses;
-                        selectedTool.element.classList.remove('cooldown');
-                    }, selectedTool.cooldown);
+                if (cell.power && !cell.crate) {
+                    const p = document.createElement('div');
+                    p.className = 'absolute inset-0 rounded-lg bg-amber-400/95 border-2 border-white flex items-center justify-center text-base shadow';
+                    p.textContent = cell.power === 'plane' ? '✈️' : (cell.power === 'rocket' ? '🚀' : '💣');
+                    el.appendChild(p);
                 }
+
+                el.addEventListener('pointerdown', (e) => onCellPointerDown(e, r, c));
+                board.appendChild(el);
             }
         }
+    }
 
-        function updateLevelTime() {
-            levelTime--;
-            if (levelTime <= 0) {
-                levelTime = 60 + (fireClass * 30);
-                fireClass++;
-                fireClassElement.textContent = fireClass;
-                document.body.className = `fire-class-${fireClass}`;
-            }
-            const minutes = Math.floor(levelTime / 60);
-            const seconds = levelTime % 60;
-            levelTimeElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    function getCellCenterOnCanvas(r, c) {
+        const el = document.getElementById(`cell-${r}-${c}`);
+        if (!el) return { x: fxCanvas.width / 2, y: fxCanvas.height / 2 };
+        const rect = el.getBoundingClientRect();
+        const lp = getLogicalPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        return { x: lp.x, y: lp.y };
+    }
+
+    function onCellPointerDown(e, r, c) {
+        if (m3Busy) return;
+        if (activeBooster) {
+            useBoosterOnCell(r, c);
+            return;
         }
+        if (grid[r][c].crate) return;
+        const lp = getLogicalPoint(e.clientX, e.clientY);
+        m3DragStart = { r, c, x: lp.x, y: lp.y };
+    }
 
-        function startFire() {
-            const greenTrees = trees.filter(tree => tree.dataset.status === 'green');
-            if (greenTrees.length > 0) {
-                for (let i = 0; i < fireClass * 2; i++) {
-                    const tree = greenTrees[Math.floor(Math.random() * greenTrees.length)];
-                    tree.dataset.status = 'burning';
-                    tree.previousSibling.style.display = 'block'; // Show fire
-                }
-                if (fireClass >= 5) {
-                    showAlert("Лесные жители обеспокоены и требуют немедленных действий!");
-                }
-            }
-        }
-
-        function updateNews() {
-            const newsItem = document.createElement('div');
-            newsItem.classList.add('news-item');
-            const newsTexts = [
-                "Лесные жители обеспокоены возможностью пожаров.",
-                "В лесу повысился уровень пожарной опасности.",
-                "Пожарные бригады готовы к действиям.",
-                "Новый вертолет готов к вылету.",
-                "Пожарные успешно потушили несколько деревьев."
-            ];
-            newsItem.textContent = newsTexts[Math.floor(Math.random() * newsTexts.length)];
-            newsBar.appendChild(newsItem);
-            if (newsBar.children.length > 5) {
-                newsBar.removeChild(newsBar.firstChild);
+    window.addEventListener('pointermove', (e) => {
+        if (!m3DragStart || m3Busy) return;
+        const lp = getLogicalPoint(e.clientX, e.clientY);
+        const dx = lp.x - m3DragStart.x;
+        const dy = lp.y - m3DragStart.y;
+        if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+            const { r, c } = m3DragStart;
+            m3DragStart = null;
+            let nr = r, nc = c;
+            if (Math.abs(dx) > Math.abs(dy)) nc += dx > 0 ? 1 : -1;
+            else nr += dy > 0 ? 1 : -1;
+            if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && !grid[nr][nc].crate) {
+                selectedCell = null;
+                attemptSwap(r, c, nr, nc);
             }
         }
+    });
 
-        function showAlert(message) {
-            const alert = document.createElement('div');
-            alert.classList.add('alert');
-            alert.textContent = message;
-            document.body.appendChild(alert);
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
+    window.addEventListener('pointerup', () => {
+        if (!m3DragStart || m3Busy) return;
+        const { r, c } = m3DragStart;
+        m3DragStart = null;
+        onCellTap(r, c);
+    });
+
+    function onCellTap(r, c) {
+        if (grid[r][c].crate) return;
+        if (grid[r][c].power && (!selectedCell || (selectedCell.r === r && selectedCell.c === c))) {
+            triggerPowerTile(r, c);
+            return;
+        }
+        if (!selectedCell) {
+            selectedCell = { r, c };
+            playSound('tap');
+            renderM3Board();
+            return;
+        }
+        if (selectedCell.r === r && selectedCell.c === c) {
+            selectedCell = null;
+            renderM3Board();
+            return;
+        }
+        if (Math.abs(selectedCell.r - r) + Math.abs(selectedCell.c - c) === 1) {
+            const sr = selectedCell.r, sc = selectedCell.c;
+            selectedCell = null;
+            attemptSwap(sr, sc, r, c);
+        } else {
+            selectedCell = { r, c };
+            playSound('tap');
+            renderM3Board();
+        }
+    }
+
+    async function attemptSwap(r1, c1, r2, c2) {
+        if (grid[r1][c1].crate || grid[r2][c2].crate) return;
+        m3Busy = true;
+        playSound('tap');
+
+        const tmp = grid[r1][c1];
+        grid[r1][c1] = grid[r2][c2];
+        grid[r2][c2] = tmp;
+        renderM3Board();
+        await delay(140);
+
+        const hasPower = grid[r1][c1].power || grid[r2][c2].power;
+        const res = scanMatches();
+
+        if (res.matched.size === 0 && !hasPower) {
+            const rev = grid[r1][c1];
+            grid[r1][c1] = grid[r2][c2];
+            grid[r2][c2] = rev;
+            renderM3Board();
+            m3Busy = false;
+            return;
         }
 
-        function updateBudgetTooltip() {
-            budgetTooltip.textContent = `Заработано: ${firesExtinguished * 5000}, Потрачено: ${100000 - budget}`;
-        }
+        movesLeft = Math.max(0, movesLeft - 1);
+        document.getElementById('m3-moves').textContent = movesLeft;
 
-        function purchaseItem(item) {
-            if (item === 'seeds' && budget >= 10000) {
-                budget -= 10000;
-                budgetElement.textContent = budget;
-                trees.forEach(tree => {
-                    if (tree.dataset.status === 'burned') {
-                        tree.dataset.status = 'green';
-                        tree.src = 'assets/tree.png';
-                    }
-                });
-            } else if (item === 'helicopterOrder' && budget >= 15000) {
-                budget -= 15000;
-                budgetElement.textContent = budget;
-                tools.helicopter.uses += 1;
-                tools.helicopter.countElement.textContent = tools.helicopter.uses;
-            } else if (item === 'firefighter' && budget >= 500) {
-                budget -= 500;
-                budgetElement.textContent = budget;
-                tools.firefighter.uses += 1;
-                tools.firefighter.countElement.textContent = tools.firefighter.uses;
-            }
-            updateBudgetTooltip();
-        }
+        if (grid[r1][c1].power) expandPowerBlast(r1, c1, res.matched);
+        if (grid[r2][c2].power) expandPowerBlast(r2, c2, res.matched);
 
-        Object.values(tools).forEach(tool => {
-            tool.element.addEventListener('click', () => {
-                selectedTool = tool;
-                message.textContent = tool.message;
+        await resolveCascades(res);
+        checkLevelComplete();
+        m3Busy = false;
+    }
+
+    async function triggerPowerTile(r, c) {
+        m3Busy = true;
+        movesLeft = Math.max(0, movesLeft - 1);
+        document.getElementById('m3-moves').textContent = movesLeft;
+        const matched = new Set();
+        expandPowerBlast(r, c, matched);
+        await resolveCascades({ matched, spawns: [] });
+        checkLevelComplete();
+        m3Busy = false;
+    }
+
+    function expandPowerBlast(r, c, matchedSet) {
+        const p = grid[r][c]?.power;
+        if (!p) return;
+        grid[r][c].power = null;
+        const pt = getCellCenterOnCanvas(r, c);
+
+        if (p === 'plane') {
+            playSound('rocket');
+            spawnShockwave(pt.x, pt.y, '#38bdf8');
+            matchedSet.add(`${r},${c}`);
+            [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
+                if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) matchedSet.add(`${nr},${nc}`);
             });
-        });
-
-        shopToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-
-        shopItems.addEventListener('click', (e) => {
-            if (e.target.dataset.item) {
-                purchaseItem(e.target.dataset.item);
+            for (let k = 0; k < 3; k++) {
+                const rr = Math.floor(Math.random() * GRID_SIZE);
+                const cc = Math.floor(Math.random() * GRID_SIZE);
+                const dest = getCellCenterOnCanvas(rr, cc);
+                spawnLaserBeam(pt.x, pt.y, dest.x, dest.y, '#fde047');
+                matchedSet.add(`${rr},${cc}`);
             }
-        });
-
-        sidebar.addEventListener('click', (e) => {
-            if (e.target.dataset.item) {
-                purchaseItem(e.target.dataset.item);
+        } else if (p === 'rocket') {
+            playSound('rocket');
+            spawnLaserBeam(0, pt.y, fxCanvas.width, pt.y, '#38bdf8');
+            spawnLaserBeam(pt.x, 0, pt.x, fxCanvas.height, '#38bdf8');
+            for (let i = 0; i < GRID_SIZE; i++) {
+                matchedSet.add(`${r},${i}`);
+                matchedSet.add(`${i},${c}`);
             }
-        });
+        } else if (p === 'bomb') {
+            playSound('bomb');
+            spawnShockwave(pt.x, pt.y, '#f43f5e');
+            spawnConfetti(pt.x, pt.y, 30);
+            for (let dr = -2; dr <= 2; dr++) {
+                for (let dc = -2; dc <= 2; dc++) {
+                    const nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                        matchedSet.add(`${nr},${nc}`);
+                    }
+                }
+            }
+        }
+    }
 
-        init();
-    </script>
+    function scanMatches() {
+        const matched = new Set();
+        const spawns = [];
+
+        // 2x2 Square -> Paper Plane ✈️
+        for (let r = 0; r < GRID_SIZE - 1; r++) {
+            for (let c = 0; c < GRID_SIZE - 1; c++) {
+                if (grid[r][c].crate || grid[r][c+1].crate || grid[r+1][c].crate || grid[r+1][c+1].crate) continue;
+                const t = grid[r][c].type;
+                if (
+                    grid[r][c + 1].type === t &&
+                    grid[r + 1][c].type === t &&
+                    grid[r + 1][c + 1].type === t
+                ) {
+                    matched.add(`${r},${c}`);
+                    matched.add(`${r},${c + 1}`);
+                    matched.add(`${r + 1},${c}`);
+                    matched.add(`${r + 1},${c + 1}`);
+                    spawns.push({ r, c, type: t, power: 'plane' });
+                }
+            }
+        }
+
+        // Horizontal
+        for (let r = 0; r < GRID_SIZE; r++) {
+            let run = 1;
+            for (let c = 1; c <= GRID_SIZE; c++) {
+                const same = c < GRID_SIZE && !grid[r][c].crate && !grid[r][c - 1].crate && grid[r][c].type === grid[r][c - 1].type;
+                if (same) {
+                    run++;
+                } else {
+                    if (run >= 3 && !grid[r][c - 1].crate) {
+                        for (let k = c - run; k < c; k++) matched.add(`${r},${k}`);
+                        if (run === 4) spawns.push({ r, c: c - 2, type: grid[r][c - 1].type, power: 'rocket' });
+                        else if (run >= 5) spawns.push({ r, c: c - 3, type: grid[r][c - 1].type, power: 'bomb' });
+                    }
+                    run = 1;
+                }
+            }
+        }
+
+        // Vertical
+        for (let c = 0; c < GRID_SIZE; c++) {
+            let run = 1;
+            for (let r = 1; r <= GRID_SIZE; r++) {
+                const same = r < GRID_SIZE && !grid[r][c].crate && !grid[r - 1][c].crate && grid[r][c].type === grid[r - 1][c].type;
+                if (same) {
+                    run++;
+                } else {
+                    if (run >= 3 && !grid[r - 1][c].crate) {
+                        for (let k = r - run; k < r; k++) matched.add(`${k},${c}`);
+                        if (run === 4) spawns.push({ r: r - 2, c, type: grid[r - 1][c].type, power: 'rocket' });
+                        else if (run >= 5) spawns.push({ r: r - 3, c, type: grid[r - 1][c].type, power: 'bomb' });
+                    }
+                    run = 1;
+                }
+            }
+        }
+
+        return { matched, spawns };
+    }
+
+    async function resolveCascades(initial) {
+        let cur = initial;
+        while (cur.matched.size > 0) {
+            playSound('match');
+
+            for (const key of Array.from(cur.matched)) {
+                const [r, c] = key.split(',').map(Number);
+                if (grid[r][c] && grid[r][c].power) {
+                    expandPowerBlast(r, c, cur.matched);
+                }
+            }
+
+            const coords = Array.from(cur.matched).map(s => s.split(',').map(Number));
+
+            // Break adjacent crates 📦 when tiles match next to them!
+            coords.forEach(([r, c]) => {
+                [[r-1,c],[r+1,c],[r,c-1],[r,c+1],[r,c]].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && grid[nr][nc]?.crate) {
+                        grid[nr][nc].crate = false;
+                        if (levelGoals.crate) {
+                            levelGoals.crate.cur = Math.min(levelGoals.crate.max, levelGoals.crate.cur + 1);
+                        }
+                        const pt = getCellCenterOnCanvas(nr, nc);
+                        spawnConfetti(pt.x, pt.y, 10, '#d97706');
+                    }
+                });
+            });
+
+            coords.forEach(([r, c]) => {
+                const cell = grid[r][c];
+                if (cell) {
+                    if (levelGoals[cell.type]) {
+                        levelGoals[cell.type].cur = Math.min(levelGoals[cell.type].max, levelGoals[cell.type].cur + 1);
+                    }
+                    const pt = getCellCenterOnCanvas(r, c);
+                    spawnConfetti(pt.x, pt.y, 6, TILE_TYPES[cell.type].color);
+                }
+                const el = document.getElementById(`cell-${r}-${c}`);
+                if (el) el.classList.add('matched');
+            });
+
+            renderM3GoalsUI();
+            await delay(180);
+
+            coords.forEach(([r, c]) => { grid[r][c] = null; });
+            cur.spawns.forEach(sp => {
+                grid[sp.r][sp.c] = { type: sp.type, power: sp.power, crate: false, isNew: true };
+            });
+
+            for (let c = 0; c < GRID_SIZE; c++) {
+                let wr = GRID_SIZE - 1;
+                for (let r = GRID_SIZE - 1; r >= 0; r--) {
+                    if (grid[r][c] !== null) {
+                        grid[wr][c] = grid[r][c];
+                        if (wr !== r) {
+                            grid[wr][c].isNew = true;
+                            grid[r][c] = null;
+                        }
+                        wr--;
+                    }
+                }
+                for (let r = wr; r >= 0; r--) {
+                    grid[r][c] = {
+                        type: Math.floor(Math.random() * TILE_TYPES.length),
+                        power: null,
+                        crate: false,
+                        isNew: true
+                    };
+                }
+            }
+
+            renderM3Board();
+            await delay(180);
+            cur = scanMatches();
+        }
+    }
+
+    function activateM3Booster(type) {
+        if (m3Busy) return;
+        playSound('tap');
+        if (boosts[type] <= 0) return;
+        activeBooster = activeBooster === type ? null : type;
+        document.getElementById('m3-comment').textContent = activeBooster
+            ? '«Нажми на любую клетку или коробку 📦 для удара бустером!»'
+            : '«Разбивай коробки переезда 📦 рядом с фишками! Квадрат 2x2 даёт Самолётик ✈️!»';
+    }
+
+    function buyExtraMovesWithCoins() {
+        if (coins < 100) {
+            document.getElementById('m3-comment').textContent = '«Нужно 100 монет 🪙 для +5 ходов!»';
+            return;
+        }
+        coins -= 100;
+        movesLeft += 5;
+        playSound('fanfare');
+        document.getElementById('m3-moves').textContent = movesLeft;
+        saveGameProgress(false);
+    }
+
+    async function useBoosterOnCell(r, c) {
+        const mode = activeBooster;
+        activeBooster = null;
+        boosts[mode]--;
+        document.getElementById(`cnt-${mode}`).textContent = boosts[mode];
+
+        m3Busy = true;
+        const matched = new Set();
+        const pt = getCellCenterOnCanvas(r, c);
+        if (mode === 'hammer') {
+            playSound('bomb');
+            spawnShockwave(pt.x, pt.y, '#fbbf24');
+            if (grid[r][c].crate) {
+                grid[r][c].crate = false;
+                if (levelGoals.crate) levelGoals.crate.cur = Math.min(levelGoals.crate.max, levelGoals.crate.cur + 1);
+            }
+            matched.add(`${r},${c}`);
+        } else if (mode === 'broom') {
+            playSound('rocket');
+            spawnLaserBeam(0, pt.y, fxCanvas.width, pt.y, '#f472b6');
+            spawnLaserBeam(pt.x, 0, pt.x, fxCanvas.height, '#f472b6');
+            for (let i = 0; i < GRID_SIZE; i++) {
+                matched.add(`${r},${i}`);
+                matched.add(`${i},${c}`);
+            }
+        }
+        await resolveCascades({ matched, spawns: [] });
+        checkLevelComplete();
+        m3Busy = false;
+    }
+
+    function checkLevelComplete() {
+        const won = Object.values(levelGoals).every(g => g.cur >= g.max);
+        if (won) {
+            const reward = 120 + movesLeft * 8;
+            stars += 1;
+            coins += reward;
+            currentLevel += 1;
+            saveGameProgress(false);
+            playSound('fanfare');
+            spawnConfetti(fxCanvas.width / 2, fxCanvas.height / 2, 55);
+
+            document.getElementById('victory-coins').textContent = `+${reward} Монет`;
+            const m = document.getElementById('modal-victory');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        } else if (movesLeft <= 0) {
+            if (coins >= 100) {
+                coins -= 100;
+                movesLeft = 5;
+                document.getElementById('m3-moves').textContent = movesLeft;
+                document.getElementById('m3-comment').textContent = '«Дарина добавила +5 дополнительных ходов за 100 🪙, чтобы закончить уборку!»';
+            } else {
+                initMatch3Level(currentLevel);
+                document.getElementById('m3-comment').textContent = '«Ходы закончились — пробуем уровень заново!»';
+            }
+        }
+    }
+
+    function returnToApartmentAfterWin() {
+        const m = document.getElementById('modal-victory');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        closeMatch3Screen();
+        sayDarina(`«Ура! Теперь у нас ⭐ ${stars}! Копим звёзды или сразу открываем новую мебель в 3D-двушке!»`);
+    }
+
+    function nextMatch3LevelAfterWin() {
+        const m = document.getElementById('modal-victory');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        initMatch3Level(currentLevel);
+    }
+
+    /*************************************************************************
+     * 13. PARTICLE BURSTS, SHOCKWAVES & WINDOW RESIZE
+     *************************************************************************/
+    const fxCanvas = document.getElementById('fx-canvas');
+    const fxCtx = fxCanvas.getContext('2d');
+    let particles = [];
+    let shockwaves = [];
+    let lasers = [];
+
+    function handleResize() {
+        const lp = getLogicalPoint(0, 0);
+        fxCanvas.width = lp.w;
+        fxCanvas.height = lp.h;
+        if (renderer && camera) {
+            camera.aspect = lp.w / lp.h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(lp.w, lp.h);
+        }
+    }
+    window.addEventListener('resize', handleResize);
+
+    function spawnConfetti(x, y, count = 20, forcedColor = null) {
+        const cols = ['#fbbf24', '#f43f5e', '#34d399', '#38bdf8', '#a855f7'];
+        for (let i = 0; i < count; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const s = 2 + Math.random() * 5.5;
+            particles.push({
+                x, y,
+                vx: Math.cos(a) * s,
+                vy: Math.sin(a) * s - 2,
+                r: 3 + Math.random() * 4,
+                color: forcedColor || cols[Math.floor(Math.random() * cols.length)],
+                life: 1
+            });
+        }
+    }
+
+    function spawnShockwave(x, y, color = '#fbbf24') {
+        shockwaves.push({ x, y, r: 8, maxR: 135, color, life: 1 });
+    }
+
+    function spawnLaserBeam(x1, y1, x2, y2, color = '#38bdf8') {
+        lasers.push({ x1, y1, x2, y2, color, life: 1 });
+    }
+
+    function renderFxLoop() {
+        fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+            const sw = shockwaves[i];
+            sw.r += (sw.maxR - sw.r) * 0.22;
+            sw.life -= 0.06;
+            if (sw.life <= 0) { shockwaves.splice(i, 1); continue; }
+            fxCtx.save();
+            fxCtx.globalAlpha = sw.life;
+            fxCtx.strokeStyle = sw.color;
+            fxCtx.lineWidth = 5 * sw.life;
+            fxCtx.beginPath();
+            fxCtx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
+            fxCtx.stroke();
+            fxCtx.restore();
+        }
+
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            const ls = lasers[i];
+            ls.life -= 0.08;
+            if (ls.life <= 0) { lasers.splice(i, 1); continue; }
+            fxCtx.save();
+            fxCtx.globalAlpha = ls.life;
+            fxCtx.strokeStyle = ls.color;
+            fxCtx.lineWidth = 10 * ls.life;
+            fxCtx.lineCap = 'round';
+            fxCtx.beginPath();
+            fxCtx.moveTo(ls.x1, ls.y1);
+            fxCtx.lineTo(ls.x2, ls.y2);
+            fxCtx.stroke();
+            fxCtx.restore();
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.16;
+            p.life -= 0.028;
+            if (p.life <= 0) { particles.splice(i, 1); continue; }
+            fxCtx.globalAlpha = p.life;
+            fxCtx.fillStyle = p.color;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            fxCtx.fill();
+        }
+        fxCtx.globalAlpha = 1;
+        requestAnimationFrame(renderFxLoop);
+    }
+
+    function delay(ms) {
+        return new Promise(res => setTimeout(res, ms));
+    }
+
+    window.onload = () => {
+        loadSavedProgressOnStartup();
+        handleResize();
+        createInitialPinDOMElements();
+        initThreeJSWorld();
+        updateApartmentHUD();
+        saveGameProgress(false);
+        requestAnimationFrame(animateThreeJSWorld);
+        requestAnimationFrame(renderFxLoop);
+    };
+</script>
 </body>
 </html>
