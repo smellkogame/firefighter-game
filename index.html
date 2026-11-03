@@ -101,9 +101,11 @@
             position: absolute;
             transform: translate(-50%, -100%);
             animation: pulsePin 2.1s ease-in-out infinite;
-            pointer-events: auto;
+            pointer-events: auto !important;
+            touch-action: manipulation;
             cursor: pointer;
-            z-index: 15;
+            z-index: 35;
+            white-space: nowrap;
         }
         .actor-bubble-3d {
             position: absolute;
@@ -114,6 +116,31 @@
         }
         .furn-pop { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .tile-drop { animation: tileDropIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+        /* Non-blocking slim bottom-left speech pill that NEVER covers the 3D apartment */
+        #darina-toast-box {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #darina-toast-box.toast-hidden {
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+        }
+        #webgl-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 42%, #93c5fd 100%);
+            overflow: hidden;
+            z-index: 1;
+        }
+        #webgl-container canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
 
         /* Horizontal Match-3 Responsive Board */
         .m3-board-wrap {
@@ -185,24 +212,24 @@
         <div id="overlay-3d-bubbles" class="pointer-events-none absolute inset-0 overflow-hidden z-25"></div>
 
         <!-- =============================================================== -->
-        <!-- TOP HUD: Stars, Coins, Story Chapter, Dialogue Toast, Save/Map  -->
+        <!-- TOP HUD: Stars, Coins, Story Chapter, Save/Map & Zoom Controls  -->
         <!-- =============================================================== -->
-        <header class="absolute top-0 inset-x-0 z-30 px-2.5 py-2 flex items-start justify-between gap-2 pointer-events-none">
+        <header class="absolute top-0 inset-x-0 z-30 px-2.5 py-1.5 flex items-center justify-between gap-1.5 pointer-events-none">
 
             <!-- Left: Stars, Coins, Story Chapter Progress -->
             <div class="flex items-center gap-1.5 pointer-events-auto shrink-0">
                 <button onclick="openTasksModal()" class="hs-pill px-2.5 py-1 rounded-full flex items-center gap-1 active:scale-95 transition">
-                    <span class="text-base">⭐</span>
-                    <span id="hud-stars" class="text-white font-black text-xs sm:text-sm">1</span>
+                    <span class="text-sm">⭐</span>
+                    <span id="hud-stars" class="text-white font-black text-xs sm:text-sm">6</span>
                     <span class="w-4 h-4 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center">+</span>
                 </button>
                 <div class="hs-pill px-2.5 py-1 rounded-full flex items-center gap-1">
-                    <span class="text-sm">🪙</span>
-                    <span id="hud-coins" class="text-amber-300 font-black text-xs sm:text-sm">250</span>
+                    <span class="text-xs">🪙</span>
+                    <span id="hud-coins" class="text-amber-300 font-black text-xs sm:text-sm">300</span>
                 </div>
                 <button onclick="openStoryModal()" class="hs-pill px-2.5 py-1 rounded-full flex items-center gap-1.5 cursor-pointer active:scale-95">
                     <span class="text-xs">📖</span>
-                    <div class="w-20 sm:w-24 text-left">
+                    <div class="w-16 sm:w-22 text-left">
                         <div class="flex justify-between text-[9px] font-black text-amber-200 leading-none mb-0.5">
                             <span id="hud-chapter-label">Глава 1</span>
                             <span id="hud-progress-txt">0/14</span>
@@ -214,27 +241,18 @@
                 </button>
             </div>
 
-            <!-- Center: Darina's Multi-line Toast (Never clips!) -->
-            <div id="darina-toast-box" onclick="triggerRandomFamilyDialogue()"
-                 class="pointer-events-auto hs-pill px-3 py-1.5 rounded-2xl max-w-[310px] sm:max-w-[430px] flex items-center gap-2 border-pink-400/60 cursor-pointer transition hover:border-amber-300">
-                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-pink-500 flex items-center justify-center text-sm shrink-0 shadow">
-                    👩🏻
-                </div>
-                <p id="hud-dialogue" class="text-[10.5px] sm:text-xs font-extrabold text-amber-100 leading-snug whitespace-normal break-words">
-                    «За окном Нерюнгринская ГРЭС дымит в -42°C, а мы обустраиваем нашу тёплую двушку по БТИ!»
-                </p>
-            </div>
-
-            <!-- Right: Save (iPhone Cloud/Local), BTI Map, Camera Controls -->
+            <!-- Right: Save (iPhone Cloud/Local), BTI Map, Zoom In/Out & Camera Controls -->
             <div class="flex items-center gap-1 pointer-events-auto shrink-0">
-                <button onclick="openSaveModal()" class="hs-btn-green px-2.5 py-1 rounded-full text-white font-black text-[11px] flex items-center gap-1" title="Сохранение на iPhone">
+                <button onclick="openSaveModal()" class="hs-btn-green px-2 py-1 rounded-full text-white font-black text-[11px] flex items-center gap-1" title="Сохранение на iPhone">
                     <span>💾</span>
-                    <span id="save-status-badge" class="hidden md:inline">Сохранено</span>
+                    <span id="save-status-badge" class="hidden xl:inline">Сохранено</span>
                 </button>
-                <button onclick="openBtiMapModal()" class="hs-btn-amber px-2.5 py-1 rounded-full text-slate-950 font-black text-[11px] flex items-center gap-1">
+                <button onclick="openBtiMapModal()" class="hs-btn-amber px-2 py-1 rounded-full text-slate-950 font-black text-[11px] flex items-center gap-1" title="План БТИ">
                     <span>📐</span>
                     <span class="hidden lg:inline">БТИ</span>
                 </button>
+                <button onclick="zoomCameraBy(-3.6)" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-emerald-300 font-black active:scale-90 border border-emerald-400/50" title="Сильно приблизить">➕</button>
+                <button onclick="zoomCameraBy(3.6)" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-amber-300 font-black active:scale-90 border border-amber-400/50" title="Отдалить">➖</button>
                 <button onclick="rotateCameraBy(-0.35)" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white font-black active:scale-90" title="Повернуть влево">↺</button>
                 <button onclick="rotateCameraBy(0.35)" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white font-black active:scale-90" title="Повернуть вправо">↻</button>
                 <button id="btn-sound" onclick="toggleSound()" class="hs-pill w-7 h-7 rounded-full flex items-center justify-center text-xs text-white active:scale-90">🔊</button>
@@ -242,24 +260,44 @@
             </div>
         </header>
 
+        <!-- Compact Non-Blocking Speech Strip (Wraps full text without truncation, Auto-Hides!) -->
+        <div id="darina-toast-box"
+             class="pointer-events-none absolute top-11 left-2.5 z-25 hs-pill px-3 py-1.5 rounded-2xl max-w-[92vw] sm:max-w-[540px] flex items-center gap-2 border border-pink-400/60 shadow-md">
+            <span class="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-pink-500 flex items-center justify-center text-[11px] shrink-0">👩🏻</span>
+            <p id="hud-dialogue" class="text-[10px] sm:text-[11px] font-extrabold text-amber-100 leading-snug whitespace-normal break-words">
+                «Квартира стала в 2 раза просторнее! Нажми ➕ чтобы приблизить меня и котиков!»
+            </p>
+        </div>
+
         <!-- =============================================================== -->
         <!-- BOTTOM-CENTER: 3-STYLE 3D FURNITURE SELECTOR DOCK               -->
         <!-- =============================================================== -->
-        <div id="style-selector-dock" class="absolute bottom-0 inset-x-0 z-40 hidden justify-center px-3 pb-2.5 pt-1 pointer-events-none">
-            <div class="pointer-events-auto bg-slate-900/95 backdrop-blur-md border-2 border-amber-400 rounded-3xl p-2.5 shadow-2xl w-full max-w-lg furn-pop">
+        <div id="style-selector-dock"
+             class="absolute bottom-0 inset-x-0 z-[250] hidden justify-center px-3 pb-2 pt-1 pointer-events-none">
+            <div id="style-selector-panel"
+                 class="pointer-events-auto bg-slate-900/95 backdrop-blur-md border-2 border-amber-400 rounded-3xl p-2.5 shadow-2xl w-full max-w-xl furn-pop">
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0">3D Дизайн</span>
                         <h4 id="dock-item-title" class="text-white font-black text-xs sm:text-sm truncate">Угловой диван в зале</h4>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="cancelFurnitureEdit()" class="w-7 h-7 rounded-full bg-slate-700 text-slate-200 font-black text-xs active:scale-90">✕</button>
-                        <button onclick="confirmFurnitureEdit()" class="hs-btn-green px-3.5 py-1 rounded-xl text-white font-black text-xs flex items-center gap-1">
+                        <button id="btn-style-close" type="button" onclick="cancelFurnitureEdit()"
+                                class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 text-slate-100 font-black text-xs active:scale-90 cursor-pointer">✕</button>
+                        <button id="btn-style-confirm" type="button" onclick="confirmFurnitureEdit()"
+                                class="hs-btn-green px-4 py-1.5 rounded-xl text-white font-black text-xs flex items-center gap-1 cursor-pointer">
                             <span id="dock-confirm-label">✔ Выбрать</span>
                         </button>
                     </div>
                 </div>
-                <div id="dock-style-cards" class="grid grid-cols-3 gap-2"></div>
+                <div id="dock-style-cards" class="grid grid-cols-3 gap-2">
+                    <button type="button" id="style-card-btn-0" onclick="selectPreviewStyleIndex(0)"
+                            class="p-2 rounded-2xl border-2 flex items-center gap-2 transition active:scale-95 cursor-pointer select-none"></button>
+                    <button type="button" id="style-card-btn-1" onclick="selectPreviewStyleIndex(1)"
+                            class="p-2 rounded-2xl border-2 flex items-center gap-2 transition active:scale-95 cursor-pointer select-none"></button>
+                    <button type="button" id="style-card-btn-2" onclick="selectPreviewStyleIndex(2)"
+                            class="p-2 rounded-2xl border-2 flex items-center gap-2 transition active:scale-95 cursor-pointer select-none"></button>
+                </div>
             </div>
         </div>
 
@@ -634,20 +672,35 @@
         }
     }, { passive: true });
 
+    // Always returns logical landscape dimensions (W >= H) matching #app-shell
+    function getLogicalViewport() {
+        const rawW = window.innerWidth || document.documentElement.clientWidth || 800;
+        const rawH = window.innerHeight || document.documentElement.clientHeight || 450;
+        const isPortrait = rawW < rawH;
+        return {
+            w: Math.max(320, isPortrait ? rawH : rawW),
+            h: Math.max(240, isPortrait ? rawW : rawH),
+            rawW,
+            rawH,
+            isPortrait
+        };
+    }
+
     function getLogicalPoint(clientX, clientY) {
-        if (window.innerWidth < window.innerHeight) {
+        const vp = getLogicalViewport();
+        if (vp.isPortrait) {
             return {
                 x: clientY,
-                y: window.innerWidth - clientX,
-                w: window.innerHeight,
-                h: window.innerWidth
+                y: vp.rawW - clientX,
+                w: vp.w,
+                h: vp.h
             };
         }
         return {
             x: clientX,
             y: clientY,
-            w: window.innerWidth,
-            h: window.innerHeight
+            w: vp.w,
+            h: vp.h
         };
     }
 
@@ -764,175 +817,175 @@
             cats: 'Балу и Багира: «Мурр-мяу! Лучший дом на свете! 💚💛»'
         }
     ];
-
-    // 14 Detailed 3D Furniture Zones across all BTI rooms (Costs 2-3 stars for deeper gameplay)
+    // 14 Detailed 3D Furniture Zones across all BTI rooms (2X SPACIOUS APARTMENT COORDINATES)
+    const APT_SCALE = 2.0; // Doubles all room widths, depths, and furniture spacing!
     const FURNITURE_DATA = {
         sofa: {
             id: 'sofa', btiRoom: 1, cost: 2, completed: false, style: 0,
             title: '№1 Зал: Угловой диван и пледы',
             desc: 'Большой мягкий диван с подушками в просторном зале 17,4 м²',
-            pos: { x: 4.5, z: 0.7 }, walk: { x: 4.2, z: 2.1 },
+            pos: { x: 9.0, z: 1.4 }, walk: { x: 8.2, z: 4.0 },
             praise: '«Диван встал идеально ровно! И подушки по цветам — Балу уже занял уголок!»',
             styles: [
-                { name: 'Изумрудный велюр', color: '#059669', hex: 0x059669 },
-                { name: 'Молочный кашемир', color: '#f59e0b', hex: 0xfde68a },
-                { name: 'Терракотовый уют', color: '#ea580c', hex: 0xea580c }
+                { name: 'Изумрудный велюр', color: '#059669', hex: 0x059669, accent: 0xfbbf24 },
+                { name: 'Молочный кашемир', color: '#f59e0b', hex: 0xfde68a, accent: 0xea580c },
+                { name: 'Терракотовый лофт', color: '#ea580c', hex: 0xea580c, accent: 0xfef08a }
             ]
         },
         tv: {
             id: 'tv', btiRoom: 1, cost: 3, completed: false, style: 0,
             title: '№1 Зал: ТВ-стена 65" и биокамин',
             desc: 'Домашний кинотеатр и живой огонь биокамина для вечеров в -42°C',
-            pos: { x: 4.6, z: -1.65 }, walk: { x: 4.5, z: -0.5 },
+            pos: { x: 9.2, z: -3.3 }, walk: { x: 9.0, z: -1.2 },
             praise: '«Телевизор висит строго по уровню, а биокамин согревает весь зал!»',
             styles: [
-                { name: 'Орех и Золото', color: '#b45309', hex: 0x78350f },
-                { name: 'Белый Мрамор', color: '#94a3b8', hex: 0xf1f5f9 },
-                { name: 'Графит Лофт', color: '#38bdf8', hex: 0x1e293b }
+                { name: 'Орех и Золото', color: '#b45309', hex: 0x78350f, accent: 0xfbbf24 },
+                { name: 'Белый Мрамор', color: '#94a3b8', hex: 0xf1f5f9, accent: 0x38bdf8 },
+                { name: 'Графит Неон', color: '#38bdf8', hex: 0x1e293b, accent: 0xa855f7 }
             ]
         },
         rug_table: {
             id: 'rug_table', btiRoom: 1, cost: 2, completed: false, style: 0,
             title: '№1 Зал: Ковёр, торшер и чайный столик',
             desc: 'Тёплый тканый ковёр с татарским орнаментом и журнальный столик',
-            pos: { x: 4.5, z: 2.2 }, walk: { x: 3.4, z: 2.3 },
+            pos: { x: 9.0, z: 4.6 }, walk: { x: 6.8, z: 4.6 },
             praise: '«Какой мягкий ворс у ковра и тёплый свет от торшера! Ногам сразу тепло!»',
             styles: [
-                { name: 'Казанский узор', color: '#d97706', hex: 0xfef3c7 },
-                { name: 'Сканди Изумруд', color: '#10b981', hex: 0xa7f3d0 },
-                { name: 'Пудровый шёлк', color: '#ec4899', hex: 0xfce7f3 }
+                { name: 'Казанский узор', color: '#d97706', hex: 0xfef3c7, accent: 0xd97706 },
+                { name: 'Сканди Изумруд', color: '#10b981', hex: 0xa7f3d0, accent: 0x047857 },
+                { name: 'Пудровый шёлк', color: '#ec4899', hex: 0xfce7f3, accent: 0xdb2777 }
             ]
         },
         bookshelf: {
             id: 'bookshelf', btiRoom: 1, cost: 3, completed: false, style: 0,
             title: '№1 Зал: Стеллаж, книги и монстера',
             desc: 'Дизайнерский стеллаж с идеально расставленными книгами и живыми растениями',
-            pos: { x: 6.1, z: 1.5 }, walk: { x: 5.3, z: 1.5 },
+            pos: { x: 12.1, z: 3.0 }, walk: { x: 10.6, z: 3.0 },
             praise: '«Книги стоят по росту и оттенкам корешков, а зелёная монстера оживила весь угол!»',
             styles: [
-                { name: 'Тёплый дуб', color: '#b45309', hex: 0x92400e },
-                { name: 'Сливочный эмаль', color: '#eab308', hex: 0xfef9c3 },
-                { name: 'Изумрудный сад', color: '#059669', hex: 0x065f46 }
+                { name: 'Тёплый дуб', color: '#b45309', hex: 0x92400e, accent: 0xfbbf24 },
+                { name: 'Сливочная эмаль', color: '#eab308', hex: 0xfef9c3, accent: 0xd97706 },
+                { name: 'Изумрудный сад', color: '#059669', hex: 0x065f46, accent: 0x34d399 }
             ]
         },
         window_living: {
             id: 'window_living', btiRoom: 1, cost: 2, completed: false, style: 0,
             title: '№1 Зал: Панорамное окно на ГРЭС и шторы',
             desc: 'Тёплый стеклопакет с бархатными шторами и гирляндой на фоне огней Нерюнгри',
-            pos: { x: 4.6, z: 4.15 }, walk: { x: 4.6, z: 3.4 },
+            pos: { x: 9.2, z: 8.2 }, walk: { x: 9.2, z: 6.8 },
             praise: '«Через чистое окно видно сопки и огни Нерюнгри, а дома +25°C и ни малейшего сквозняка!»',
             styles: [
-                { name: 'Золотистый бархат', color: '#f59e0b', hex: 0xd97706 },
-                { name: 'Изумрудный уют', color: '#10b981', hex: 0x047857 },
-                { name: 'Ягодный велюр', color: '#e11d48', hex: 0xbe123c }
+                { name: 'Золотистый бархат', color: '#f59e0b', hex: 0xd97706, accent: 0xfef08a },
+                { name: 'Изумрудный уют', color: '#10b981', hex: 0x047857, accent: 0xa7f3d0 },
+                { name: 'Ягодный велюр', color: '#e11d48', hex: 0xbe123c, accent: 0xfecdd3 }
             ]
         },
         bed: {
             id: 'bed', btiRoom: 2, cost: 3, completed: false, style: 0,
             title: '№2 Спальня: Кровать King-Size и бра',
             desc: 'Двуспальная кровать с каретной стяжкой и прикроватными тумбочками (10,5 м²)',
-            pos: { x: 0.4, z: 1.8 }, walk: { x: 0.2, z: 0.5 },
+            pos: { x: 0.8, z: 3.8 }, walk: { x: 0.4, z: 1.2 },
             praise: '«Покрывало натянуто без единой складочки! В нашей спальне 10,5 м² так романтично!»',
             styles: [
-                { name: 'Розовый жемчуг', color: '#db2777', hex: 0xdb2777 },
-                { name: 'Лазурный бархат', color: '#0284c7', hex: 0x0284c7 },
-                { name: 'Медовый шале', color: '#d97706', hex: 0xd97706 }
+                { name: 'Розовый жемчуг', color: '#db2777', hex: 0xdb2777, accent: 0xfce7f3 },
+                { name: 'Лазурный бархат', color: '#0284c7', hex: 0x0284c7, accent: 0xe0f2fe },
+                { name: 'Медовый шале', color: '#d97706', hex: 0xd97706, accent: 0xfef3c7 }
             ]
         },
         wardrobe: {
             id: 'wardrobe', btiRoom: 2, cost: 3, completed: false, style: 0,
             title: '№2 Спальня: Шкаф-купе и бьюти-столик',
             desc: 'Вместительный гардероб с зеркалом в пол и туалетным столиком Дарины',
-            pos: { x: 1.4, z: 0.1 }, walk: { x: 0.5, z: 0.4 },
+            pos: { x: 2.8, z: 0.4 }, walk: { x: 1.2, z: 1.0 },
             praise: '«Каждая блузка и платьице развешаны по цветам! И столик с подсветкой для макияжа!»',
             styles: [
-                { name: 'Пудра и Золото', color: '#f472b6', hex: 0xfce7f3 },
-                { name: 'Светлый Ясень', color: '#fbbf24', hex: 0xfef3c7 },
-                { name: 'Сапфировый люкс', color: '#38bdf8', hex: 0xe0f2fe }
+                { name: 'Пудра и Золото', color: '#f472b6', hex: 0xf472b6, accent: 0xfbbf24 },
+                { name: 'Светлый Ясень', color: '#fbbf24', hex: 0xd97706, accent: 0xfef3c7 },
+                { name: 'Сапфировый люкс', color: '#38bdf8', hex: 0x0284c7, accent: 0xe0f2fe }
             ]
         },
         cattree: {
             id: 'cattree', btiRoom: 2, cost: 2, completed: false, style: 0,
             title: '№2 Спальня: Дворец Балу и Багиры',
             desc: 'Многоярусный игровой комплекс с когтеточками, домиком и двумя мисочками',
-            pos: { x: -0.95, z: 3.3 }, walk: { x: -0.2, z: 3.1 },
+            pos: { x: -1.6, z: 6.8 }, walk: { x: -0.3, z: 6.2 },
             praise: '«Балу и Багира в восторге! Теперь у каждого своя полочка и полная мисочка корма!»',
             styles: [
-                { name: 'Сливочный плюш', color: '#f59e0b', hex: 0xfef3c7 },
-                { name: 'Мятный оазис', color: '#10b981', hex: 0xd1fae5 },
-                { name: 'Королевский розовый', color: '#ec4899', hex: 0xfce7f3 }
+                { name: 'Сливочный плюш', color: '#f59e0b', hex: 0xf59e0b, accent: 0xfef3c7 },
+                { name: 'Мятный оазис', color: '#10b981', hex: 0x10b981, accent: 0xd1fae5 },
+                { name: 'Королевский розовый', color: '#ec4899', hex: 0xec4899, accent: 0xfce7f3 }
             ]
         },
         kitchen: {
             id: 'kitchen', btiRoom: 3, cost: 3, completed: false, style: 0,
             title: '№3 Кухня: Гарнитур и двухдверный холодильник',
             desc: 'Угловая кухня с духовым шкафом, подсветкой и органайзерами (10,4 м²)',
-            pos: { x: -4.2, z: 0.4 }, walk: { x: -4.2, z: 1.5 },
+            pos: { x: -8.2, z: 1.0 }, walk: { x: -8.2, z: 3.2 },
             praise: '«На кухне 10,4 м² каждая баночка подписана, а столешница сияет чистотой!»',
             styles: [
-                { name: 'Мятный Шалфей', color: '#10b981', hex: 0x059669 },
-                { name: 'Ванильный Классик', color: '#f59e0b', hex: 0xfde68a },
-                { name: 'Коралловый Шик', color: '#f43f5e', hex: 0xe11d48 }
+                { name: 'Мятный Шалфей', color: '#10b981', hex: 0x059669, accent: 0xa7f3d0 },
+                { name: 'Ванильный Классик', color: '#f59e0b', hex: 0xd97706, accent: 0xfef3c7 },
+                { name: 'Коралловый Шик', color: '#f43f5e', hex: 0xe11d48, accent: 0xfecdd3 }
             ]
         },
         dining: {
             id: 'dining', btiRoom: 3, cost: 2, completed: false, style: 0,
             title: '№3 Кухня: Стол с вафлями и чак-чаком',
             desc: 'Обеденная группа с бельгийскими вафлями с мороженым и татарским чаем',
-            pos: { x: -4.1, z: 2.7 }, walk: { x: -5.1, z: 2.5 },
+            pos: { x: -8.0, z: 5.5 }, walk: { x: -10.0, z: 5.0 },
             praise: '«Бельгийские вафли с фисташковым мороженым и горячий чай с чак-чаком — объедение!»',
             styles: [
-                { name: 'Отпускные вафли', color: '#2563eb', hex: 0x2563eb },
-                { name: 'Татарское чаепитие', color: '#10b981', hex: 0x059669 },
-                { name: 'Романтический вечер', color: '#e11d48', hex: 0xbe123c }
+                { name: 'Отпускные вафли', color: '#2563eb', hex: 0x2563eb, accent: 0x93c5fd },
+                { name: 'Татарское чаепитие', color: '#10b981', hex: 0x059669, accent: 0xfde047 },
+                { name: 'Романтический вечер', color: '#e11d48', hex: 0xbe123c, accent: 0xfda4af }
             ]
         },
         balcony: {
             id: 'balcony', btiRoom: 3, cost: 3, completed: false, style: 0,
             title: '№3 Балкон: Тёплая лаунж-зона с панорамой',
             desc: 'Утеплённая лоджия с плетёным креслом-коконом, гирляндами и видом на сопки',
-            pos: { x: -4.5, z: 5.0 }, walk: { x: -4.5, z: 3.6 },
+            pos: { x: -8.8, z: 9.8 }, walk: { x: -8.8, z: 7.4 },
             praise: '«Даже на балконе теперь тёплый пол и уютное кресло! Можно пить какао и смотреть на снег!»',
             styles: [
-                { name: 'Хюгге с гирляндой', color: '#f59e0b', hex: 0xd97706 },
-                { name: 'Зимний сад', color: '#10b981', hex: 0x059669 },
-                { name: 'Лаунж Розе', color: '#ec4899', hex: 0xdb2777 }
+                { name: 'Хюгге с гирляндой', color: '#f59e0b', hex: 0xd97706, accent: 0xfef08a },
+                { name: 'Зимний сад', color: '#10b981', hex: 0x059669, accent: 0x6ee7b7 },
+                { name: 'Лаунж Розе', color: '#ec4899', hex: 0xdb2777, accent: 0xfbcfe8 }
             ]
         },
         bath: {
             id: 'bath', btiRoom: 7, cost: 3, completed: false, style: 0,
             title: '№7 Ванная: Джакузи с пеной и стиральная зона',
             desc: 'Глубокая ванна с густой пеной, тумба с раковиной и стиральная машина в №5',
-            pos: { x: -4.2, z: -3.5 }, walk: { x: -3.6, z: -2.8 },
+            pos: { x: -8.2, z: -7.0 }, walk: { x: -7.2, z: -5.4 },
             praise: '«Тёплая ванна с ароматной пеной и пушистые полотенца — лучшее спа в Нерюнгри!»',
             styles: [
-                { name: 'Лазурный океан', color: '#06b6d4', hex: 0x38bdf8 },
-                { name: 'Золотой мрамор', color: '#fbbf24', hex: 0xfde047 },
-                { name: 'Изумрудное спа', color: '#10b981', hex: 0x34d399 }
+                { name: 'Лазурный океан', color: '#06b6d4', hex: 0x0284c7, accent: 0x7dd3fc },
+                { name: 'Золотой мрамор', color: '#fbbf24', hex: 0xd97706, accent: 0xfef08a },
+                { name: 'Изумрудное спа', color: '#10b981', hex: 0x059669, accent: 0x6ee7b7 }
             ]
         },
         toilet: {
             id: 'toilet', btiRoom: 6, cost: 2, completed: false, style: 0,
             title: '№6 Санузел: Инсталляция и бойлер',
             desc: 'Современный подвесной санузел с тёплым светом и водонагревателем',
-            pos: { x: -0.2, z: -2.65 }, walk: { x: -0.6, z: -1.6 },
+            pos: { x: -0.4, z: -5.2 }, walk: { x: -1.1, z: -3.2 },
             praise: '«Санузел №6 сверкает чистотой, а горячая вода есть круглый год!»',
             styles: [
-                { name: 'Белоснежный минимализм', color: '#38bdf8', hex: 0xe0f2fe },
-                { name: 'Тёплый травертин', color: '#f59e0b', hex: 0xfef3c7 },
-                { name: 'Морская лагуна', color: '#10b981', hex: 0xccfbf1 }
+                { name: 'Белоснежный аква', color: '#38bdf8', hex: 0x0284c7, accent: 0xe0f2fe },
+                { name: 'Тёплый травертин', color: '#f59e0b', hex: 0xd97706, accent: 0xfef3c7 },
+                { name: 'Морская лагуна', color: '#10b981', hex: 0x059669, accent: 0xccfbf1 }
             ]
         },
         hallway: {
             id: 'hallway', btiRoom: 4, cost: 2, completed: false, style: 0,
             title: '№4 Прихожая и №8 Коридор: Пуфик и ковровые дорожки',
             desc: 'Шкаф для зимних пуховиков, мягкий банкетный пуф и дорожки с подогревом',
-            pos: { x: -4.2, z: -1.1 }, walk: { x: -3.5, z: -1.1 },
+            pos: { x: -8.2, z: -2.2 }, walk: { x: -6.8, z: -2.2 },
             praise: '«С самого порога в прихожей №4 и коридоре №8 виден наш фирменный порядок!»',
             styles: [
-                { name: 'Золотистый велюр', color: '#f59e0b', hex: 0xfde68a },
-                { name: 'Изумрудный холл', color: '#10b981', hex: 0xa7f3d0 },
-                { name: 'Ягодный акцент', color: '#ec4899', hex: 0xfbcfe8 }
+                { name: 'Золотистый велюр', color: '#f59e0b', hex: 0xd97706, accent: 0xfde68a },
+                { name: 'Изумрудный холл', color: '#10b981', hex: 0x059669, accent: 0xa7f3d0 },
+                { name: 'Ягодный акцент', color: '#ec4899', hex: 0xdb2777, accent: 0xfbcfe8 }
             ]
         }
     };
@@ -940,9 +993,9 @@
     /*************************************************************************
      * 3. GAME STATE & TRIPLE PERSISTENCE (IPHONE LOCALSTORAGE + INDEXEDDB + CLOUD)
      *************************************************************************/
-    const SAVE_STORAGE_KEY = 'darinascapes_3d_neryungri_v3';
-    let stars = 1; // Starts with 1 star; items cost 2-3 stars so gameplay is engaging!
-    let coins = 250;
+    const SAVE_STORAGE_KEY = 'darinascapes_3d_neryungri_v4';
+    let stars = 6; // Starts with 6 stars so Darina can immediately unlock & test several 3D items!
+    let coins = 300;
     let currentLevel = 1;
     let currentChapter = 1;
     let boosts = { hammer: 2, broom: 1 };
@@ -1094,16 +1147,18 @@
     let sceneReady = false;
     const furnitureMeshes = {};
     const clickableFloorObjects = [];
-
-    // 3D Camera Orbit & Target
-    let camTarget = new THREE.Vector3(0.4, 0, 0.7);
-    let camDesiredTarget = new THREE.Vector3(0.4, 0, 0.7);
+    const clickableFurnitureObjects = [];
+    // 3D Camera Orbit, Target & Deep Zoom (Supports zooming right up to Darina's face!)
+    let camTarget = new THREE.Vector3(1.0, 0, 1.5);
+    let camDesiredTarget = new THREE.Vector3(1.0, 0, 1.5);
     let camAngle = 0.0;
     let camDesiredAngle = 0.0;
-    let camDist = 14.8;
-    let camDesiredDist = 14.8;
-    let camHeight = 12.6;
-    let camDesiredHeight = 12.6;
+    let camDist = 22.0;
+    let camDesiredDist = 22.0;
+    let camHeight = 18.0;
+    let camDesiredHeight = 18.0;
+    const CAM_MIN_DIST = 4.2;  // Very close zoom to inspect Darina's eyes, cats & furniture!
+    const CAM_MAX_DIST = 44.0; // Wide overview of 2x apartment + Neryungri city
 
     // Animated Neryungri City Background Objects
     const gresSteamPuffs = [];
@@ -1111,177 +1166,148 @@
     const cityCars = [];
     let snowSystem = null;
     let targetRingMesh = null;
+    let lastViewportW = 0;
+    let lastViewportH = 0;
 
-    // Procedural Texture Generators (So walls NEVER look white or blend together!)
-    function makeWallpaperTexture(bgHex, stripeHex, wainscotHex, topTrimHex) {
-        const c = document.createElement('canvas');
-        c.width = 256; c.height = 256;
-        const ctx = c.getContext('2d');
-
-        // Main Warm Wallpaper Background
-        ctx.fillStyle = bgHex;
-        ctx.fillRect(0, 0, 256, 256);
-
-        // Cozy Vertical Stripes & Subtle Diamond Pattern
-        ctx.fillStyle = stripeHex;
-        for (let x = 0; x < 256; x += 32) {
-            ctx.fillRect(x, 0, 12, 256);
-        }
-        ctx.strokeStyle = 'rgba(0,0,0,0.07)';
-        ctx.lineWidth = 2;
-        for (let y = 28; y < 195; y += 36) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(256, y);
-            ctx.stroke();
-        }
-
-        // Lower Wood Wainscoting Panel (Панель и высокий плинтус)
-        ctx.fillStyle = wainscotHex;
-        ctx.fillRect(0, 198, 256, 58);
-        ctx.fillStyle = '#3f2305';
-        ctx.fillRect(0, 240, 256, 16); // Dark wood baseboard
-
-        // Upper Crown Molding Trim
-        ctx.fillStyle = topTrimHex;
-        ctx.fillRect(0, 0, 256, 18);
-
-        const tex = new THREE.CanvasTexture(c);
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(2, 1);
-        return tex;
-    }
-
-    function makeParquetTexture(c1, c2) {
-        const c = document.createElement('canvas');
-        c.width = 128; c.height = 128;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = c1;
-        ctx.fillRect(0, 0, 128, 128);
-        ctx.fillStyle = c2;
-        ctx.fillRect(0, 0, 64, 32);
-        ctx.fillRect(64, 32, 64, 32);
-        ctx.fillRect(0, 64, 64, 32);
-        ctx.fillRect(64, 96, 64, 32);
-        ctx.strokeStyle = 'rgba(60,25,5,0.32)';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(0, 0, 128, 128);
-        const tex = new THREE.CanvasTexture(c);
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(5, 5);
-        return tex;
-    }
-
-    function makeTileTexture(bg, lineCol) {
-        const c = document.createElement('canvas');
-        c.width = 128; c.height = 128;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, 128, 128);
-        ctx.strokeStyle = lineCol;
-        ctx.lineWidth = 5;
-        ctx.strokeRect(4, 4, 120, 120);
-        const tex = new THREE.CanvasTexture(c);
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(5, 5);
-        return tex;
+    // Pure 3D Geometric Floor & Wall Builders (Zero CanvasTexture = Zero Mobile WebGL Context Loss!)
+    function createContactShadowDisc(radiusX, radiusZ, opacity = 0.24) {
+        const geo = new THREE.CircleGeometry(1, 20);
+        geo.rotateX(-Math.PI / 2);
+        const mat = new THREE.MeshBasicMaterial({
+            color: 0x090d16,
+            transparent: true,
+            opacity,
+            depthWrite: false
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.scale.set(radiusX, 1, radiusZ);
+        mesh.position.y = 0.082;
+        return mesh;
     }
 
     function initThreeJSWorld() {
         const container = document.getElementById('webgl-container');
+        if (!container || typeof THREE === 'undefined') return;
+        container.innerHTML = '';
+
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0c192c);
-        scene.fog = new THREE.FogExp2(0x0c192c, 0.014);
+        scene.background = new THREE.Color(0x1e3a5f);
+        scene.fog = new THREE.FogExp2(0x1e3a5f, 0.0085);
 
-        const lp = getLogicalPoint(0, 0);
-        camera = new THREE.PerspectiveCamera(40, lp.w / lp.h, 0.1, 140);
+        const vp = getLogicalViewport();
+        lastViewportW = vp.w;
+        lastViewportH = vp.h;
 
-        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-        renderer.setSize(lp.w, lp.h);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+        camera = new THREE.PerspectiveCamera(38, vp.w / vp.h, 0.1, 260);
+
+        try {
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: false,
+                powerPreference: 'default',
+                preserveDrawingBuffer: false
+            });
+        } catch (err) {
+            renderer = new THREE.WebGLRenderer({ antialias: false });
+        }
+
+        // Disable heavy GPU shadowMap buffers (we use lightweight 3D contact shadows instead for 100% mobile compatibility!)
+        renderer.shadowMap.enabled = false;
+        renderer.setClearColor(0x1e3a5f, 1);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+        renderer.setSize(vp.w, vp.h, false);
+
+        const canvas = renderer.domElement;
+        canvas.style.width = vp.w + 'px';
+        canvas.style.height = vp.h + 'px';
+        container.appendChild(canvas);
+
+        // Automatic recovery if mobile OS ever suspends WebGL context
+        canvas.addEventListener('webglcontextlost', (ev) => {
+            ev.preventDefault();
+        }, false);
+        canvas.addEventListener('webglcontextrestored', () => {
+            initThreeJSWorld();
+        }, false);
 
         raycaster = new THREE.Raycaster();
 
-        // Warm Interior & Winter Moonlight Lighting
-        const hemi = new THREE.HemisphereLight(0xdbeafe, 0x78350f, 0.72);
+        // Bright, Cheerful Interior & Winter Sky Lighting
+        const ambient = new THREE.AmbientLight(0xffffff, 0.78);
+        scene.add(ambient);
+
+        const hemi = new THREE.HemisphereLight(0xe0f2fe, 0x78350f, 0.62);
         scene.add(hemi);
 
-        const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.88);
-        dirLight.position.set(10, 20, 12);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
-        dirLight.shadow.camera.near = 2;
-        dirLight.shadow.camera.far = 48;
-        const d = 14;
-        dirLight.shadow.camera.left = -d;
-        dirLight.shadow.camera.right = d;
-        dirLight.shadow.camera.top = d;
-        dirLight.shadow.camera.bottom = -d;
+        const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.85);
+        dirLight.position.set(20, 38, 26);
         scene.add(dirLight);
 
-        // Warm Cozy Point Lights inside each BTI room
-        const livingLight = new THREE.PointLight(0xffedd5, 0.75, 11);
-        livingLight.position.set(4.4, 3.2, 1.2);
-        scene.add(livingLight);
+        const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.35);
+        fillLight.position.set(-22, 24, -18);
+        scene.add(fillLight);
 
-        const bedLight = new THREE.PointLight(0xfce7f3, 0.65, 9);
-        bedLight.position.set(0.3, 3.0, 2.0);
-        scene.add(bedLight);
+        gresSteamPuffs.length = 0;
+        cityPedestrians.length = 0;
+        cityCars.length = 0;
+        clickableFloorObjects.length = 0;
+        clickableFurnitureObjects.length = 0;
 
-        const kitchenLight = new THREE.PointLight(0xfef3c7, 0.7, 10);
-        kitchenLight.position.set(-4.0, 3.0, 2.0);
-        scene.add(kitchenLight);
-
-        buildLivingNeryungriCityDiorama();
-        buildBtiApartmentArchitecture();
-        rebuildAllFurnitureMeshes();
-        buildActors3D();
+        try { buildLivingNeryungriCityDiorama(); } catch (e) { console.error('City err:', e); }
+        try { buildBtiApartmentArchitecture(); } catch (e) { console.error('Arch err:', e); }
+        try { rebuildAllFurnitureMeshes(); } catch (e) { console.error('Furn err:', e); }
+        try { buildActors3D(); } catch (e) { console.error('Actor err:', e); }
 
         // Green Walk Target Indicator Ring
-        const ringGeo = new THREE.RingGeometry(0.22, 0.34, 24);
+        const ringGeo = new THREE.RingGeometry(0.35, 0.52, 24);
         ringGeo.rotateX(-Math.PI / 2);
         targetRingMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide }));
-        targetRingMesh.position.y = 0.05;
+        targetRingMesh.position.y = 0.095;
         targetRingMesh.visible = false;
         scene.add(targetRingMesh);
 
         setupViewportInteractions(container);
         sceneReady = true;
+
+        // Render immediate first frame so screen is never black
+        camera.position.set(
+            camTarget.x + Math.sin(camAngle) * camDist,
+            camHeight,
+            camTarget.z + Math.cos(camAngle) * camDist
+        );
+        camera.lookAt(camTarget);
+        renderer.render(scene, camera);
     }
 
     /*************************************************************************
-     * 5. LIVING NERYUNGRI 3D CITYSCAPE (ГРЭС, ДОМА, ПАРК, ЛЮДИ, СНЕГ)
+     * 5. LIVING NERYUNGRI 3D CITYSCAPE (SCALED FOR 2X SPACIOUS APARTMENT)
      *************************************************************************/
     function buildLivingNeryungriCityDiorama() {
-        // Snowy ground expanse around the apartment building
+        // Snowy ground expanse around the 2x apartment building
         const snowGround = new THREE.Mesh(
-            new THREE.PlaneGeometry(110, 110),
+            new THREE.PlaneGeometry(180, 180),
             new THREE.MeshLambertMaterial({ color: 0xdbeafe })
         );
         snowGround.rotation.x = -Math.PI / 2;
-        snowGround.position.y = -0.15;
+        snowGround.position.y = -0.18;
         snowGround.receiveShadow = true;
         scene.add(snowGround);
 
-        // Apartment Exterior Pedestal Foundation
+        // Apartment Exterior Pedestal Foundation (2X Size: 28.4 x 23.6)
         const foundation = new THREE.Mesh(
-            new THREE.BoxGeometry(14.6, 0.3, 12.2),
+            new THREE.BoxGeometry(28.4, 0.32, 23.6),
             new THREE.MeshLambertMaterial({ color: 0x334155 })
         );
-        foundation.position.set(0.1, -0.14, 0.6);
+        foundation.position.set(0.2, -0.15, 1.2);
         scene.add(foundation);
 
         // Snowy Stanovoy Sopki (Hills of Neryungri) around the horizon
         const hillPositions = [
-            { x: -24, z: -26, r: 14, h: 11 },
-            { x: -6,  z: -29, r: 17, h: 14 },
-            { x: 16,  z: -27, r: 15, h: 12 },
-            { x: 30,  z: -16, r: 13, h: 9.5 },
-            { x: -28, z: 6,   r: 12, h: 8.5 }
+            { x: -38, z: -42, r: 22, h: 17 },
+            { x: -10, z: -46, r: 26, h: 21 },
+            { x: 24,  z: -43, r: 24, h: 18 },
+            { x: 46,  z: -26, r: 20, h: 15 },
+            { x: -44, z: 10,  r: 19, h: 14 }
         ];
         hillPositions.forEach(hp => {
             const hill = new THREE.Mesh(
@@ -1301,64 +1327,63 @@
 
         // НЕРЮНГРИНСКАЯ ГРЭС (Neryungri Power Plant with 3 tall red/white striped chimneys & steam!)
         const gresGroup = new THREE.Group();
-        gresGroup.position.set(14, 0, -19);
+        gresGroup.position.set(22, 0, -32);
 
         const mainHall = new THREE.Mesh(
-            new THREE.BoxGeometry(9.5, 4.2, 4.5),
+            new THREE.BoxGeometry(14.0, 6.2, 6.5),
             new THREE.MeshLambertMaterial({ color: 0x475569 })
         );
-        mainHall.position.y = 2.1;
+        mainHall.position.y = 3.1;
         gresGroup.add(mainHall);
 
         // Glowing Industrial Windows on GRES
-        for (let wx = -3.6; wx <= 3.6; wx += 1.2) {
+        for (let wx = -5.4; wx <= 5.4; wx += 1.8) {
             const wMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(0.7, 0.9, 4.56),
+                new THREE.BoxGeometry(1.0, 1.3, 6.6),
                 new THREE.MeshBasicMaterial({ color: 0xfef08a })
             );
-            wMesh.position.set(wx, 2.4, 0);
+            wMesh.position.set(wx, 3.5, 0);
             gresGroup.add(wMesh);
         }
 
         // 3 Striped Smokestacks + Rising Steam Puffs
-        [-2.8, 0, 2.8].forEach((cx, sIdx) => {
-            const stackH = 9.5 + (sIdx === 1 ? 1.5 : 0);
+        [-4.2, 0, 4.2].forEach((cx, sIdx) => {
+            const stackH = 13.5 + (sIdx === 1 ? 2.0 : 0);
             for (let seg = 0; seg < 6; seg++) {
                 const segMesh = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.38 - seg * 0.02, 0.42 - seg * 0.02, stackH / 6, 12),
+                    new THREE.CylinderGeometry(0.52 - seg * 0.03, 0.58 - seg * 0.03, stackH / 6, 12),
                     new THREE.MeshLambertMaterial({ color: seg % 2 === 0 ? 0xdc2626 : 0xf8fafc })
                 );
-                segMesh.position.set(cx, (seg + 0.5) * (stackH / 6), -0.8);
+                segMesh.position.set(cx, (seg + 0.5) * (stackH / 6), -1.0);
                 gresGroup.add(segMesh);
             }
 
-            // Create 5 animated steam puffs per chimney
             for (let p = 0; p < 5; p++) {
                 const puff = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.55 + p * 0.18, 10, 10),
+                    new THREE.SphereGeometry(0.8 + p * 0.25, 10, 10),
                     new THREE.MeshLambertMaterial({ color: 0xf8fafc, transparent: true, opacity: 0.65 })
                 );
                 const baseTop = stackH;
-                puff.position.set(14 + cx, baseTop + p * 1.1, -19.8);
+                puff.position.set(22 + cx, baseTop + p * 1.5, -33.0);
                 scene.add(puff);
                 gresSteamPuffs.push({
                     mesh: puff,
-                    baseX: 14 + cx,
+                    baseX: 22 + cx,
                     baseY: baseTop,
-                    baseZ: -19.8,
+                    baseZ: -33.0,
                     offset: p * 0.2 + sIdx * 0.33
                 });
             }
         });
         scene.add(gresGroup);
 
-        // COLORFUL NERYUNGRI RESIDENTIAL PANEL BUILDINGS (Around the apartment)
+        // COLORFUL NERYUNGRI RESIDENTIAL PANEL BUILDINGS (Positioned cleanly outside 2X apartment)
         const buildingSpecs = [
-            { x: -13.5, z: -13.5, w: 5.5, h: 6.5, d: 3.2, col: 0xea580c }, // Warm Orange North Building
-            { x: -6.0,  z: -14.5, w: 6.2, h: 7.5, d: 3.2, col: 0x0284c7 }, // Cyan/Blue Building
-            { x: 3.0,   z: -14.5, w: 5.8, h: 6.8, d: 3.2, col: 0xd97706 }, // Amber Building
-            { x: -14.2, z: -3.5,  w: 3.6, h: 5.8, d: 5.5, col: 0x059669 }, // Emerald Building
-            { x: 13.8,  z: -2.0,  w: 3.8, h: 6.4, d: 6.2, col: 0xdb2777 }  // Berry Building
+            { x: -22.5, z: -22.0, w: 8.0, h: 9.5, d: 4.8, col: 0xea580c },
+            { x: -10.0, z: -23.5, w: 9.0, h: 11.0, d: 4.8, col: 0x0284c7 },
+            { x: 5.0,   z: -23.5, w: 8.5, h: 10.0, d: 4.8, col: 0xd97706 },
+            { x: -23.5, z: -4.0,  w: 5.4, h: 8.8, d: 8.5, col: 0x059669 },
+            { x: 23.0,  z: -2.0,  w: 5.6, h: 9.4, d: 9.2, col: 0xdb2777 }
         ];
         buildingSpecs.forEach(b => {
             const bGroup = new THREE.Group();
@@ -1369,27 +1394,25 @@
             hull.position.y = b.h / 2;
             bGroup.add(hull);
 
-            // Snow Roof Cap
             const roof = new THREE.Mesh(
-                new THREE.BoxGeometry(b.w + 0.2, 0.25, b.d + 0.2),
+                new THREE.BoxGeometry(b.w + 0.3, 0.35, b.d + 0.3),
                 new THREE.MeshLambertMaterial({ color: 0xf8fafc })
             );
-            roof.position.y = b.h + 0.12;
+            roof.position.y = b.h + 0.17;
             bGroup.add(roof);
 
-            // Cozy Lit Windows
-            const rows = Math.floor(b.h / 1.3);
-            const cols = Math.floor(b.w / 1.2);
+            const rows = Math.floor(b.h / 1.8);
+            const cols = Math.floor(b.w / 1.7);
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     if ((r + c) % 3 === 0) continue;
                     const win = new THREE.Mesh(
-                        new THREE.BoxGeometry(0.55, 0.65, b.d + 0.08),
+                        new THREE.BoxGeometry(0.8, 0.9, b.d + 0.1),
                         new THREE.MeshBasicMaterial({ color: (r + c) % 2 === 0 ? 0xfef08a : 0xfde047 })
                     );
                     win.position.set(
-                        -b.w / 2 + 0.8 + c * 1.15,
-                        1.0 + r * 1.25,
+                        -b.w / 2 + 1.2 + c * 1.65,
+                        1.4 + r * 1.75,
                         0
                     );
                     bGroup.add(win);
@@ -1400,49 +1423,48 @@
         });
 
         // NERYUNGRI PARK PATHWAY, SNOWY SPRUCE TREES & GLOWING STREET LAMPS
-        // Snowy road & park promenade in front (z = 8.2) and behind (z = -8.5)
         const frontRoad = new THREE.Mesh(
-            new THREE.BoxGeometry(36, 0.08, 2.2),
+            new THREE.BoxGeometry(64, 0.08, 3.2),
             new THREE.MeshLambertMaterial({ color: 0x475569 })
         );
-        frontRoad.position.set(0, -0.08, 8.8);
+        frontRoad.position.set(0, -0.08, 16.5);
         scene.add(frontRoad);
 
         const parkWalkway = new THREE.Mesh(
-            new THREE.BoxGeometry(32, 0.09, 1.5),
+            new THREE.BoxGeometry(58, 0.09, 2.2),
             new THREE.MeshLambertMaterial({ color: 0x94a3b8 })
         );
-        parkWalkway.position.set(0, -0.07, 6.8);
+        parkWalkway.position.set(0, -0.07, 13.8);
         scene.add(parkWalkway);
 
         // Taiga Spruce Trees around the park
         const treeCoords = [
-            [-10, 6.2], [-7.5, 6.9], [-2.5, 6.6], [2.5, 6.9], [7.8, 6.4], [10.8, 6.8],
-            [-11, -7.8], [-8, -8.5], [-1, -7.8], [5.5, -8.2], [9.5, -7.5],
-            [-10.5, 1.5], [10.2, 2.2], [10.5, -4.5]
+            [-17, 12.6], [-12.5, 13.5], [-4.5, 13.0], [4.5, 13.4], [12.8, 12.8], [17.5, 13.4],
+            [-18, -14.5], [-13, -15.5], [-2, -14.5], [9.5, -15.2], [16.5, -14.5],
+            [-17.5, 3.0], [17.2, 4.0], [17.5, -7.5]
         ];
         treeCoords.forEach(([tx, tz]) => {
             const tree = new THREE.Group();
             const trunk = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.14, 0.2, 0.8, 8),
+                new THREE.CylinderGeometry(0.2, 0.28, 1.1, 8),
                 new THREE.MeshLambertMaterial({ color: 0x5c3a21 })
             );
-            trunk.position.y = 0.4;
+            trunk.position.y = 0.55;
             tree.add(trunk);
 
-            [0.9, 1.5, 2.1].forEach((ly, i) => {
+            [1.2, 2.0, 2.8].forEach((ly, i) => {
                 const cone = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.85 - i * 0.2, 1.1, 8),
+                    new THREE.ConeGeometry(1.15 - i * 0.26, 1.45, 8),
                     new THREE.MeshLambertMaterial({ color: 0x065f46 })
                 );
                 cone.position.y = ly;
                 tree.add(cone);
 
                 const snowCone = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.78 - i * 0.2, 0.4, 8),
+                    new THREE.ConeGeometry(1.05 - i * 0.25, 0.55, 8),
                     new THREE.MeshLambertMaterial({ color: 0xf8fafc })
                 );
-                snowCone.position.y = ly + 0.34;
+                snowCone.position.y = ly + 0.44;
                 tree.add(snowCone);
             });
             tree.position.set(tx, -0.1, tz);
@@ -1450,22 +1472,22 @@
         });
 
         // Glowing Park Street Lamps
-        [-8.5, -3.0, 3.0, 8.5].forEach(lx => {
+        [-14.5, -5.0, 5.0, 14.5].forEach(lx => {
             const lamp = new THREE.Group();
             const pole = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.06, 0.08, 2.4, 8),
+                new THREE.CylinderGeometry(0.08, 0.1, 3.2, 8),
                 new THREE.MeshLambertMaterial({ color: 0x1e293b })
             );
-            pole.position.y = 1.2;
+            pole.position.y = 1.6;
             lamp.add(pole);
 
             const bulb = new THREE.Mesh(
-                new THREE.SphereGeometry(0.22, 10, 10),
+                new THREE.SphereGeometry(0.28, 10, 10),
                 new THREE.MeshBasicMaterial({ color: 0xfef08a })
             );
-            bulb.position.y = 2.45;
+            bulb.position.y = 3.25;
             lamp.add(bulb);
-            lamp.position.set(lx, -0.1, 6.2);
+            lamp.position.set(lx, -0.1, 12.6);
             scene.add(lamp);
         });
 
@@ -1474,33 +1496,32 @@
         for (let i = 0; i < 5; i++) {
             const pGroup = new THREE.Group();
             const coat = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.18, 0.24, 0.72, 10),
+                new THREE.CylinderGeometry(0.22, 0.30, 0.9, 10),
                 new THREE.MeshLambertMaterial({ color: coatColors[i % coatColors.length] })
             );
-            coat.position.y = 0.55;
+            coat.position.y = 0.68;
             pGroup.add(coat);
 
             const head = new THREE.Mesh(
-                new THREE.SphereGeometry(0.16, 10, 10),
+                new THREE.SphereGeometry(0.2, 10, 10),
                 new THREE.MeshLambertMaterial({ color: 0xf7cfb2 })
             );
-            head.position.y = 1.05;
+            head.position.y = 1.28;
             pGroup.add(head);
 
-            // Warm winter beanie hat
             const hat = new THREE.Mesh(
-                new THREE.SphereGeometry(0.17, 10, 8),
+                new THREE.SphereGeometry(0.21, 10, 8),
                 new THREE.MeshLambertMaterial({ color: 0xf8fafc })
             );
-            hat.position.y = 1.13;
+            hat.position.y = 1.38;
             pGroup.add(hat);
 
-            const startX = -12 + i * 6;
-            const zLane = i % 2 === 0 ? 6.65 : 7.05;
+            const startX = -18 + i * 9;
+            const zLane = i % 2 === 0 ? 13.5 : 14.1;
             const dir = i % 2 === 0 ? 1 : -1;
             pGroup.position.set(startX, -0.05, zLane);
             scene.add(pGroup);
-            cityPedestrians.push({ group: pGroup, dir, speed: 0.65 + (i % 3) * 0.15, phase: i * 1.4 });
+            cityPedestrians.push({ group: pGroup, dir, speed: 0.85 + (i % 3) * 0.2, phase: i * 1.4 });
         }
 
         // ANIMATED CARS DRIVING ON SNOWY NERYUNGRI AVENUE
@@ -1508,167 +1529,195 @@
         for (let i = 0; i < 2; i++) {
             const car = new THREE.Group();
             const body = new THREE.Mesh(
-                new THREE.BoxGeometry(1.45, 0.42, 0.76),
+                new THREE.BoxGeometry(1.9, 0.55, 0.98),
                 new THREE.MeshLambertMaterial({ color: carColors[i] })
             );
-            body.position.y = 0.32;
+            body.position.y = 0.42;
             car.add(body);
             const cabin = new THREE.Mesh(
-                new THREE.BoxGeometry(0.82, 0.34, 0.68),
+                new THREE.BoxGeometry(1.05, 0.44, 0.88),
                 new THREE.MeshLambertMaterial({ color: 0xe2e8f0 })
             );
-            cabin.position.set(-0.05, 0.65, 0);
+            cabin.position.set(-0.08, 0.85, 0);
             car.add(cabin);
-            // Headlights
             const hl = new THREE.Mesh(
-                new THREE.BoxGeometry(0.08, 0.14, 0.62),
+                new THREE.BoxGeometry(0.1, 0.18, 0.82),
                 new THREE.MeshBasicMaterial({ color: 0xfef08a })
             );
-            hl.position.set(0.73, 0.34, 0);
+            hl.position.set(0.95, 0.44, 0);
             car.add(hl);
 
             const dir = i === 0 ? 1 : -1;
-            car.position.set(i === 0 ? -15 : 15, -0.04, i === 0 ? 8.45 : 9.15);
+            car.position.set(i === 0 ? -24 : 24, -0.04, i === 0 ? 16.0 : 17.0);
             if (dir < 0) car.rotation.y = Math.PI;
             scene.add(car);
-            cityCars.push({ group: car, dir, speed: 3.4 + i * 0.6 });
+            cityCars.push({ group: car, dir, speed: 4.5 + i * 0.8 });
         }
 
         // 3D FALLING SNOWFLAKES
         const snowGeo = new THREE.BufferGeometry();
-        const snowCount = 320;
+        const snowCount = 380;
         const posArr = new Float32Array(snowCount * 3);
         for (let i = 0; i < snowCount; i++) {
-            posArr[i * 3]     = (Math.random() - 0.5) * 42;
-            posArr[i * 3 + 1] = Math.random() * 16;
-            posArr[i * 3 + 2] = (Math.random() - 0.5) * 36;
+            posArr[i * 3]     = (Math.random() - 0.5) * 68;
+            posArr[i * 3 + 1] = Math.random() * 22;
+            posArr[i * 3 + 2] = (Math.random() - 0.5) * 58;
         }
         snowGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
         snowSystem = new THREE.Points(
             snowGeo,
-            new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.8 })
+            new THREE.PointsMaterial({ color: 0xffffff, size: 0.22, transparent: true, opacity: 0.8 })
         );
         scene.add(snowSystem);
     }
 
     /*************************************************************************
-     * 6. BTI APARTMENT ARCHITECTURE WITH DISTINCT WALLPAPERS & DARK CAPS
+     * 6. BTI APARTMENT ARCHITECTURE (2X SPACIOUS ROOMS BY BTI PLAN, PURE 3D GEOMETRY)
      *************************************************************************/
     function buildBtiApartmentArchitecture() {
-        // Distinct Room Floor Materials
-        const matLivingFloor  = new THREE.MeshLambertMaterial({ map: makeParquetTexture('#c87d3b', '#df9450') });
-        const matBedroomFloor = new THREE.MeshLambertMaterial({ map: makeParquetTexture('#b4692c', '#ca7c3b') });
-        const matKitchenFloor = new THREE.MeshLambertMaterial({ map: makeTileTexture('#fffbeb', '#f59e0b') });
-        const matBathFloor    = new THREE.MeshLambertMaterial({ map: makeTileTexture('#ecfeff', '#06b6d4') });
-        const matCorrFloor    = new THREE.MeshLambertMaterial({ map: makeTileTexture('#fef3c7', '#d97706') });
-        const matBalconyFloor = new THREE.MeshLambertMaterial({ map: makeTileTexture('#e2e8f0', '#64748b') });
+        const matLivingFloor  = new THREE.MeshLambertMaterial({ color: 0xd9904e });
+        const matBedroomFloor = new THREE.MeshLambertMaterial({ color: 0xc97b3d });
+        const matKitchenFloor = new THREE.MeshLambertMaterial({ color: 0xfef3c7 });
+        const matBathFloor    = new THREE.MeshLambertMaterial({ color: 0xcffafe });
+        const matCorrFloor    = new THREE.MeshLambertMaterial({ color: 0xfde68a });
+        const matBalconyFloor = new THREE.MeshLambertMaterial({ color: 0xcbd5e1 });
 
-        function addRoomFloor(x1, z1, x2, z2, mat) {
-            const w = x2 - x1, d = z2 - z1;
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.12, d), mat);
-            mesh.position.set(x1 + w / 2, 0, z1 + d / 2);
-            mesh.receiveShadow = true;
+        // Helper multiplies original BTI coordinates by APT_SCALE (2.0x) and adds crisp 3D floor grid/planks
+        function addRoomFloor(x1, z1, x2, z2, mat, stripeHex) {
+            const sx1 = x1 * APT_SCALE, sz1 = z1 * APT_SCALE;
+            const sx2 = x2 * APT_SCALE, sz2 = z2 * APT_SCALE;
+            const w = sx2 - sx1, d = sz2 - sz1;
+            const cx = sx1 + w / 2, cz = sz1 + d / 2;
+
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 0.14, d), mat);
+            mesh.position.set(cx, 0, cz);
             scene.add(mesh);
             clickableFloorObjects.push(mesh);
+
+            // Lightweight 3D floor plank/tile accent strips (no CanvasTexture needed!)
+            const stripMat = new THREE.MeshLambertMaterial({ color: stripeHex });
+            const stepX = 1.6;
+            for (let gx = sx1 + stepX; gx < sx2 - 0.2; gx += stepX) {
+                const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.01, d - 0.15), stripMat);
+                strip.position.set(gx, 0.075, cz);
+                scene.add(strip);
+            }
+            const stepZ = 1.6;
+            for (let gz = sz1 + stepZ; gz < sz2 - 0.2; gz += stepZ) {
+                const stripZ = new THREE.Mesh(new THREE.BoxGeometry(w - 0.15, 0.008, 0.05), stripMat);
+                stripZ.position.set(cx, 0.074, gz);
+                scene.add(stripZ);
+            }
         }
 
-        // Exact BTI Rooms:
-        addRoomFloor(-4.8, -4.4, -2.5, -2.0, matBathFloor);    // #7 Ванная
-        addRoomFloor(-2.5, -4.4, -1.2, -2.0, matCorrFloor);    // #5 Кладовая
-        addRoomFloor(-1.2, -3.2,  1.2, -2.0, matBathFloor);    // #6 Санузел
-        addRoomFloor(-6.2, -2.0, -1.2, -0.2, matCorrFloor);    // #4 Прихожая
-        addRoomFloor(-1.2, -2.0,  2.2, -0.4, matCorrFloor);    // #8 Коридор
-        addRoomFloor(-6.2, -0.2, -1.2,  4.2, matKitchenFloor); // #3 Кухня 10,4 м²
-        addRoomFloor(-6.2,  4.2, -1.6,  5.6, matBalconyFloor); // #3b Балкон
-        addRoomFloor(-1.2, -0.4,  2.2,  4.2, matBedroomFloor); // #2 Спальня 10,5 м²
-        addRoomFloor( 2.2, -2.0,  6.5,  4.2, matLivingFloor);  // #1 Зал 17,4 м²
+        // Exact BTI Rooms (Doubled 2X for spacious room layout!):
+        addRoomFloor(-4.8, -4.4, -2.5, -2.0, matBathFloor,    0x67e8f9); // #7 Ванная
+        addRoomFloor(-2.5, -4.4, -1.2, -2.0, matCorrFloor,    0xf59e0b); // #5 Кладовая
+        addRoomFloor(-1.2, -3.2,  1.2, -2.0, matBathFloor,    0x67e8f9); // #6 Санузел
+        addRoomFloor(-6.2, -2.0, -1.2, -0.2, matCorrFloor,    0xf59e0b); // #4 Прихожая
+        addRoomFloor(-1.2, -2.0,  2.2, -0.4, matCorrFloor,    0xf59e0b); // #8 Коридор
+        addRoomFloor(-6.2, -0.2, -1.2,  4.2, matKitchenFloor, 0xfbbf24); // #3 Кухня 10,4 м²
+        addRoomFloor(-6.2,  4.2, -1.6,  5.6, matBalconyFloor, 0x94a3b8); // #3b Балкон
+        addRoomFloor(-1.2, -0.4,  2.2,  4.2, matBedroomFloor, 0xa15822); // #2 Спальня 10,5 м²
+        addRoomFloor( 2.2, -2.0,  6.5,  4.2, matLivingFloor,  0xb86d2e); // #1 Зал 17,4 м²
 
-        // Distinct Procedural Wallpaper Materials (Never white/blending!)
-        const wpOuter   = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#e6d5b8', '#d8c29d', '#78350f', '#451a03') });
-        const wpLiving  = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#d1fae5', '#a7f3d0', '#78350f', '#065f46') });
-        const wpBedroom = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#fce7f3', '#fbcfe8', '#831843', '#500724') });
-        const wpKitchen = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#ffedd5', '#fed7aa', '#9a3412', '#7c2d12') });
-        const wpBath    = new THREE.MeshLambertMaterial({ map: makeWallpaperTexture('#cffafe', '#a5f3fc', '#0e7490', '#155e75') });
+        // Distinct non-white wall palettes with lower wainscoting and dark walnut crown trims
+        const wpOuter   = { upper: 0xe6d2b5, lower: 0x92400e, cap: 0x451a03 };
+        const wpLiving  = { upper: 0xa7f3d0, lower: 0x065f46, cap: 0x3f2305 };
+        const wpBedroom = { upper: 0xfbcfe8, lower: 0x9d174d, cap: 0x451a03 };
+        const wpKitchen = { upper: 0xfed7aa, lower: 0x9a3412, cap: 0x451a03 };
+        const wpBath    = { upper: 0xa5f3fc, lower: 0x0e7490, cap: 0x1e293b };
 
-        // Dark Walnut Wall Top Cap Material so every wall is sharply outlined from above!
-        const wallCapMat = new THREE.MeshLambertMaterial({ color: 0x451a03 });
-
-        function addWallSegment(x1, z1, x2, z2, h = 2.05, thickness = 0.18, wpMat = wpOuter) {
-            const len = Math.hypot(x2 - x1, z2 - z1);
-            const angle = Math.atan2(z2 - z1, x2 - x1);
+        function addWallSegment(x1, z1, x2, z2, h = 2.4, thickness = 0.24, palette = wpOuter) {
+            const sx1 = x1 * APT_SCALE, sz1 = z1 * APT_SCALE;
+            const sx2 = x2 * APT_SCALE, sz2 = z2 * APT_SCALE;
+            const len = Math.hypot(sx2 - sx1, sz2 - sz1);
+            const angle = Math.atan2(sz2 - sz1, sx2 - sx1);
 
             const wallGroup = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(len, h, thickness), wpMat);
-            body.position.y = h / 2;
-            body.castShadow = true;
-            body.receiveShadow = true;
-            wallGroup.add(body);
 
-            // Crisp Dark Top Cap Moulding (Prevents walls from blending together!)
-            const cap = new THREE.Mesh(new THREE.BoxGeometry(len + 0.04, 0.09, thickness + 0.04), wallCapMat);
-            cap.position.y = h + 0.045;
+            // Upper Colored Wallpaper Section
+            const upperH = h * 0.68;
+            const lowerH = h * 0.32;
+            const upperBody = new THREE.Mesh(
+                new THREE.BoxGeometry(len, upperH, thickness),
+                new THREE.MeshLambertMaterial({ color: palette.upper })
+            );
+            upperBody.position.y = lowerH + upperH / 2;
+            wallGroup.add(upperBody);
+
+            // Lower Wainscoting Panel Section
+            const lowerBody = new THREE.Mesh(
+                new THREE.BoxGeometry(len + 0.02, lowerH, thickness + 0.03),
+                new THREE.MeshLambertMaterial({ color: palette.lower })
+            );
+            lowerBody.position.y = lowerH / 2;
+            wallGroup.add(lowerBody);
+
+            // Dark Walnut Top Crown Molding & Bottom Baseboard
+            const capMat = new THREE.MeshLambertMaterial({ color: palette.cap });
+            const cap = new THREE.Mesh(new THREE.BoxGeometry(len + 0.06, 0.12, thickness + 0.06), capMat);
+            cap.position.y = h + 0.06;
             wallGroup.add(cap);
 
-            wallGroup.position.set((x1 + x2) / 2, 0, (z1 + z2) / 2);
+            const baseboard = new THREE.Mesh(new THREE.BoxGeometry(len + 0.05, 0.10, thickness + 0.06), capMat);
+            baseboard.position.y = 0.08;
+            wallGroup.add(baseboard);
+
+            wallGroup.position.set((sx1 + sx2) / 2, 0, (sz1 + sz2) / 2);
             wallGroup.rotation.y = -angle;
             scene.add(wallGroup);
         }
 
         // Top & Back Outer Walls
-        addWallSegment(-4.8, -4.4, -1.2, -4.4, 2.1, 0.2, wpBath);
-        addWallSegment(-4.8, -4.4, -4.8, -2.0, 2.1, 0.2, wpBath);
-        addWallSegment(-1.2, -4.4, -1.2, -3.2, 2.1, 0.2, wpBath);
-        addWallSegment(-1.2, -3.2,  1.2, -3.2, 2.1, 0.2, wpBath);
-        addWallSegment( 1.2, -3.2,  1.2, -2.0, 2.1, 0.2, wpBath);
-        addWallSegment( 1.2, -2.0,  6.5, -2.0, 2.1, 0.2, wpLiving);
-        addWallSegment(-6.2, -2.0, -4.8, -2.0, 2.1, 0.2, wpOuter);
+        addWallSegment(-4.8, -4.4, -1.2, -4.4, 2.4, 0.26, wpBath);
+        addWallSegment(-4.8, -4.4, -4.8, -2.0, 2.4, 0.26, wpBath);
+        addWallSegment(-1.2, -4.4, -1.2, -3.2, 2.4, 0.26, wpBath);
+        addWallSegment(-1.2, -3.2,  1.2, -3.2, 2.4, 0.26, wpBath);
+        addWallSegment( 1.2, -3.2,  1.2, -2.0, 2.4, 0.26, wpBath);
+        addWallSegment( 1.2, -2.0,  6.5, -2.0, 2.4, 0.26, wpLiving);
+        addWallSegment(-6.2, -2.0, -4.8, -2.0, 2.4, 0.26, wpOuter);
 
         // Left & Right Outer Walls
-        addWallSegment(-6.2, -2.0, -6.2, 5.6, 2.0, 0.2, wpKitchen);
-        addWallSegment( 6.5, -2.0,  6.5, 4.2, 2.0, 0.2, wpLiving);
+        addWallSegment(-6.2, -2.0, -6.2, 5.6, 2.35, 0.26, wpKitchen);
+        addWallSegment( 6.5, -2.0,  6.5, 4.2, 2.35, 0.26, wpLiving);
 
         // Interior Partition Walls with Exact BTI Doorway Gaps:
-        // Between Bath #7 and Storage #5
-        addWallSegment(-2.5, -4.4, -2.5, -2.0, 1.95, 0.14, wpBath);
-        // Bottom of #7 & #5 with doorways at x=-3.6 and x=-1.8
-        addWallSegment(-4.8, -2.0, -4.05, -2.0, 1.95, 0.14, wpBath);
-        addWallSegment(-3.15, -2.0, -2.25, -2.0, 1.95, 0.14, wpBath);
-        addWallSegment(-1.45, -2.0, -1.2, -2.0, 1.95, 0.14, wpBath);
+        addWallSegment(-2.5, -4.4, -2.5, -2.0, 2.25, 0.20, wpBath);
+        addWallSegment(-4.8, -2.0, -4.05, -2.0, 2.25, 0.20, wpBath);
+        addWallSegment(-3.15, -2.0, -2.25, -2.0, 2.25, 0.20, wpBath);
+        addWallSegment(-1.45, -2.0, -1.2, -2.0, 2.25, 0.20, wpBath);
 
-        // Bottom of Toilet #6 with doorway at x=-0.6
-        addWallSegment(-1.2, -2.0, -0.95, -2.0, 1.95, 0.14, wpBath);
-        addWallSegment(-0.2, -2.0,  1.2, -2.0, 1.95, 0.14, wpBath);
+        addWallSegment(-1.2, -2.0, -0.95, -2.0, 2.25, 0.20, wpBath);
+        addWallSegment(-0.2, -2.0,  1.2, -2.0, 2.25, 0.20, wpBath);
 
-        // Between Hallway #4 and Corridor #8 (Open portal at z=-1.1)
-        addWallSegment(-1.2, -2.0, -1.2, -1.55, 1.95, 0.14, wpOuter);
-        addWallSegment(-1.2, -0.65, -1.2, -0.2, 1.95, 0.14, wpOuter);
+        addWallSegment(-1.2, -2.0, -1.2, -1.55, 2.25, 0.20, wpOuter);
+        addWallSegment(-1.2, -0.65, -1.2, -0.2, 2.25, 0.20, wpOuter);
 
-        // Between Hallway #4 and Kitchen #3 (Doorway at x=-4.8)
-        addWallSegment(-6.2, -0.2, -5.3, -0.2, 1.95, 0.14, wpKitchen);
-        addWallSegment(-4.25, -0.2, -1.2, -0.2, 1.95, 0.14, wpKitchen);
+        addWallSegment(-6.2, -0.2, -5.3, -0.2, 2.25, 0.20, wpKitchen);
+        addWallSegment(-4.25, -0.2, -1.2, -0.2, 2.25, 0.20, wpKitchen);
 
-        // Between Kitchen #3 and Bedroom #2
-        addWallSegment(-1.2, -0.2, -1.2, 4.2, 1.95, 0.15, wpBedroom);
+        addWallSegment(-1.2, -0.2, -1.2, 4.2, 2.25, 0.22, wpBedroom);
 
-        // Between Corridor #8 and Bedroom #2 (Doorway at x=-0.2)
-        addWallSegment(-1.2, -0.4, -0.65, -0.4, 1.95, 0.14, wpBedroom);
-        addWallSegment( 0.3, -0.4,  2.2, -0.4, 1.95, 0.14, wpBedroom);
+        addWallSegment(-1.2, -0.4, -0.65, -0.4, 2.25, 0.20, wpBedroom);
+        addWallSegment( 0.3, -0.4,  2.2, -0.4, 2.25, 0.20, wpBedroom);
 
-        // Between Corridor #8 / Bedroom #2 and Living Room #1 (Wide doorway at z=-1.15)
-        addWallSegment(2.2, -2.0, 2.2, -1.65, 1.95, 0.16, wpLiving);
-        addWallSegment(2.2, -0.65, 2.2, 4.2,  1.95, 0.16, wpLiving);
+        addWallSegment(2.2, -2.0, 2.2, -1.65, 2.25, 0.22, wpLiving);
+        addWallSegment(2.2, -0.65, 2.2, 4.2,  2.25, 0.22, wpLiving);
 
         // Low Cutaway South Front Walls & Balcony Glass Railing
-        addWallSegment(-6.2, 4.2, -5.0, 4.2, 0.65, 0.16, wpKitchen);
-        addWallSegment(-3.8, 4.2,  6.5, 4.2, 0.65, 0.16, wpOuter);
-        addWallSegment(-6.2, 5.6, -1.6, 5.6, 0.75, 0.14, wpOuter);
-        addWallSegment(-1.6, 4.2, -1.6, 5.6, 0.75, 0.14, wpOuter);
+        addWallSegment(-6.2, 4.2, -5.0, 4.2, 0.75, 0.22, wpKitchen);
+        addWallSegment(-3.8, 4.2,  6.5, 4.2, 0.75, 0.22, wpOuter);
+        addWallSegment(-6.2, 5.6, -1.6, 5.6, 0.85, 0.20, wpOuter);
+        addWallSegment(-1.6, 4.2, -1.6, 5.6, 0.85, 0.20, wpOuter);
     }
 
     /*************************************************************************
-     * 7. 3D PROCEDURAL FURNITURE BUILDER FOR ALL 14 ZONES
+     * 7. 3D PROCEDURAL FURNITURE BUILDER FOR ALL 14 ZONES (WITH 3 DISTINCT STYLES!)
      *************************************************************************/
     function rebuildAllFurnitureMeshes() {
+        clickableFurnitureObjects.length = 0;
+
         Object.keys(FURNITURE_DATA).forEach(id => {
             if (furnitureMeshes[id]) {
                 scene.remove(furnitureMeshes[id]);
@@ -1676,271 +1725,339 @@
             const item = FURNITURE_DATA[id];
             const isEditing = editingSpotId === id;
             const showDone = item.completed || isEditing;
-            const st = isEditing ? previewStyle : item.style;
-            const colHex = item.styles[st]?.hex || 0x10b981;
+            const st = isEditing ? previewStyle : (item.style || 0);
+            const styleObj = item.styles[st] || item.styles[0];
+            const colHex = styleObj.hex;
+            const accentHex = styleObj.accent || 0xfbbf24;
 
             const group = new THREE.Group();
             group.userData = { furnitureId: id };
 
             if (!showDone) {
-                // Unpacked Moving Boxes with Tape
+                // Soft 3D Contact Shadow under moving boxes
+                group.add(createContactShadowDisc(1.25, 1.15, 0.28));
+
+                // Unpacked Moving Boxes with Tape (Scaled nicely for 2X room)
                 const box1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.85, 0.68, 0.75),
+                    new THREE.BoxGeometry(1.35, 1.05, 1.2),
                     new THREE.MeshLambertMaterial({ color: 0xd97706 })
                 );
-                box1.position.y = 0.34;
-                box1.castShadow = true;
+                box1.position.y = 0.52;
                 group.add(box1);
 
                 const tape = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.87, 0.08, 0.77),
+                    new THREE.BoxGeometry(1.38, 0.12, 1.23),
                     new THREE.MeshLambertMaterial({ color: 0xfef3c7 })
                 );
-                tape.position.y = 0.52;
+                tape.position.y = 0.78;
                 group.add(tape);
 
-                group.position.set(item.pos.x, 0.06, item.pos.z);
+                const box2 = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.78, 0.65, 0.74),
+                    new THREE.MeshLambertMaterial({ color: 0xb45309 })
+                );
+                box2.position.set(0.75, 0.32, 0.35);
+                group.add(box2);
             } else {
-                buildCompleted3DFurniture(id, group, colHex, st);
-                group.position.set(item.pos.x, 0.06, item.pos.z);
+                group.add(createContactShadowDisc(1.85, 1.45, 0.25));
+                const subGroup = new THREE.Group();
+                buildCompleted3DFurniture(id, subGroup, colHex, accentHex, st);
+                // Scale furniture 1.55x so it looks rich & proportional inside the 2.0x spacious rooms
+                subGroup.scale.set(1.55, 1.55, 1.55);
+                group.add(subGroup);
             }
+
+            // Generous Invisible 3D Hitbox so tapping the furniture or box in 3D ALWAYS registers
+            const hitbox = new THREE.Mesh(
+                new THREE.BoxGeometry(3.4, 2.8, 3.4),
+                new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.001, depthWrite: false })
+            );
+            hitbox.position.y = 1.4;
+            hitbox.userData = { furnitureId: id };
+            group.add(hitbox);
+
+            if (isEditing) {
+                const editRing = new THREE.Mesh(
+                    new THREE.RingGeometry(1.55, 1.85, 32),
+                    new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide })
+                );
+                editRing.rotation.x = -Math.PI / 2;
+                editRing.position.y = 0.04;
+                group.add(editRing);
+            }
+
+            group.position.set(item.pos.x, 0.07, item.pos.z);
+
+            group.traverse(child => {
+                child.userData = { ...child.userData, furnitureId: id };
+                if (child.isMesh) {
+                    clickableFurnitureObjects.push(child);
+                }
+            });
 
             scene.add(group);
             furnitureMeshes[id] = group;
         });
     }
 
-    function buildCompleted3DFurniture(id, g, colHex, st) {
+    function buildCompleted3DFurniture(id, g, colHex, accentHex, st) {
         const matMain = new THREE.MeshLambertMaterial({ color: colHex });
-        const matWood = new THREE.MeshLambertMaterial({ color: 0x5c3a21 });
-        const matGold = new THREE.MeshLambertMaterial({ color: 0xfbbf24 });
+        const matAccent = new THREE.MeshLambertMaterial({ color: accentHex });
+        const matWood = new THREE.MeshLambertMaterial({ color: st === 1 ? 0x92400e : (st === 2 ? 0x1e293b : 0x5c3a21) });
         const matWhite = new THREE.MeshLambertMaterial({ color: 0xffffff });
 
         if (id === 'sofa') {
             const seat = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.42, 1.05), matMain);
             seat.position.y = 0.26; seat.castShadow = true; g.add(seat);
+            // Style 0: Right chaise, Style 1: Left chaise + round pouf, Style 2: Double U-shape lounge
+            const chaiseX = st === 1 ? -0.82 : 0.82;
             const chaise = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.42, 1.85), matMain);
-            chaise.position.set(0.82, 0.26, 0.4); chaise.castShadow = true; g.add(chaise);
+            chaise.position.set(chaiseX, 0.26, 0.4); chaise.castShadow = true; g.add(chaise);
+            if (st === 2) {
+                const chaise2 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.42, 1.65), matMain);
+                chaise2.position.set(-0.82, 0.26, 0.3); chaise2.castShadow = true; g.add(chaise2);
+            }
             const back = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.88, 0.26), matMain);
             back.position.set(0, 0.52, -0.4); back.castShadow = true; g.add(back);
             [-0.85, 0, 0.85].forEach(px => {
-                const p = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.35, 0.16), matGold);
-                p.position.set(px, 0.62, -0.18); g.add(p);
+                const p = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.38, 0.18), matAccent);
+                p.position.set(px, 0.64, -0.18); g.add(p);
             });
         } else if (id === 'tv') {
-            const stand = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.48, 0.55), matMain);
+            const stand = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.48, 0.55), matMain);
             stand.position.y = 0.24; stand.castShadow = true; g.add(stand);
-            const fire = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.22, 0.58), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
-            fire.position.set(0, 0.24, 0.02); g.add(fire);
-            const tv = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.15, 0.09), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+            const fireCol = st === 2 ? 0x38bdf8 : 0xf97316;
+            const fire = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.24, 0.58), new THREE.MeshBasicMaterial({ color: fireCol }));
+            fire.position.set(0, 0.25, 0.02); g.add(fire);
+            const tv = new THREE.Mesh(new THREE.BoxGeometry(2.15, 1.18, 0.09), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
             tv.position.set(0, 1.25, -0.1); tv.castShadow = true; g.add(tv);
+            const trim = new THREE.Mesh(new THREE.BoxGeometry(2.25, 1.26, 0.05), matAccent);
+            trim.position.set(0, 1.25, -0.15); g.add(trim);
         } else if (id === 'rug_table') {
-            const rug = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.03, 2.0), matMain);
+            const rug = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.04, 2.1), matMain);
             rug.position.y = 0.02; g.add(rug);
-            const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 20), matWood);
+            const border = new THREE.Mesh(new THREE.BoxGeometry(3.05, 0.025, 2.25), matAccent);
+            border.position.y = 0.01; g.add(border);
+            const tbl = new THREE.Mesh(
+                st === 1 ? new THREE.BoxGeometry(1.2, 0.08, 0.8) : new THREE.CylinderGeometry(0.65, 0.65, 0.08, 22),
+                matWood
+            );
             tbl.position.y = 0.42; tbl.castShadow = true; g.add(tbl);
-            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 0.4, 12), matGold);
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.24, 0.4, 12), matAccent);
             leg.position.y = 0.2; g.add(leg);
-            // Cozy Floor Lamp
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 1.6, 8), matGold);
-            pole.position.set(-1.1, 0.8, -0.6); g.add(pole);
-            const shade = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.38, 12), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
-            shade.position.set(-1.1, 1.65, -0.6); g.add(shade);
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 1.65, 8), matAccent);
+            pole.position.set(-1.15, 0.82, -0.6); g.add(pole);
+            const shade = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.42, 14), matMain);
+            shade.position.set(-1.15, 1.68, -0.6); g.add(shade);
         } else if (id === 'bookshelf') {
-            const unit = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.75, 1.5), matMain);
-            unit.position.y = 0.88; unit.castShadow = true; g.add(unit);
-            // Monstera Plant in Pot
-            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.18, 0.42, 12), matWhite);
-            pot.position.set(0, 0.21, 1.05); g.add(pot);
-            const bush = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), new THREE.MeshLambertMaterial({ color: 0x15803d }));
-            bush.position.set(0, 0.72, 1.05); g.add(bush);
+            const unit = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.8, 1.55), matMain);
+            unit.position.y = 0.9; unit.castShadow = true; g.add(unit);
+            const accentShelf = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.12, 1.48), matAccent);
+            accentShelf.position.set(0, 1.1, 0); g.add(accentShelf);
+            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.2, 0.44, 12), matAccent);
+            pot.position.set(0, 0.22, 1.08); g.add(pot);
+            const bush = new THREE.Mesh(new THREE.SphereGeometry(0.45, 10, 10), new THREE.MeshLambertMaterial({ color: 0x15803d }));
+            bush.position.set(0, 0.75, 1.08); g.add(bush);
         } else if (id === 'window_living') {
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.4, 0.15), matWhite);
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(2.9, 1.45, 0.15), matWhite);
             frame.position.y = 0.95; g.add(frame);
-            const glass = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.2, 0.18), new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.45 }));
+            const glass = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.25, 0.18), new THREE.MeshBasicMaterial({ color: 0x7dd3fc, transparent: true, opacity: 0.45 }));
             glass.position.y = 0.95; g.add(glass);
-            [-1.35, 1.35].forEach(cx => {
-                const drape = new THREE.Mesh(new THREE.BoxGeometry(0.38, 1.75, 0.22), matMain);
+            [-1.38, 1.38].forEach(cx => {
+                const drape = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.8, 0.24), matMain);
                 drape.position.set(cx, 0.9, 0); g.add(drape);
             });
+            const valance = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.22, 0.26), matAccent);
+            valance.position.set(0, 1.72, 0); g.add(valance);
         } else if (id === 'bed') {
-            const base = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.38, 2.25), matWhite);
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.38, 2.3), matWhite);
             base.position.y = 0.19; base.castShadow = true; g.add(base);
-            const quilt = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.24, 1.55), matMain);
+            const quilt = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.26, 1.6), matMain);
             quilt.position.set(0, 0.4, 0.32); g.add(quilt);
-            const hb = new THREE.Mesh(new THREE.BoxGeometry(1.98, 1.15, 0.22), matMain);
-            hb.position.set(0, 0.58, -1.05); hb.castShadow = true; g.add(hb);
-            [-0.48, 0.48].forEach(px => {
-                const pil = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.18, 0.42), matWhite);
-                pil.position.set(px, 0.46, -0.68); g.add(pil);
+            const throwBlanket = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.28, 0.55), matAccent);
+            throwBlanket.position.set(0, 0.41, 0.82); g.add(throwBlanket);
+            const hb = new THREE.Mesh(new THREE.BoxGeometry(2.05, 1.2, 0.24), matMain);
+            hb.position.set(0, 0.6, -1.05); hb.castShadow = true; g.add(hb);
+            [-0.5, 0.5].forEach(px => {
+                const pil = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.2, 0.44), matAccent);
+                pil.position.set(px, 0.48, -0.68); g.add(pil);
             });
         } else if (id === 'wardrobe') {
-            const cab = new THREE.Mesh(new THREE.BoxGeometry(1.45, 1.85, 0.58), matMain);
-            cab.position.y = 0.92; cab.castShadow = true; g.add(cab);
-            const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.55, 0.61), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
-            mirror.position.y = 0.92; g.add(mirror);
+            const cab = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.9, 0.62), matMain);
+            cab.position.y = 0.95; cab.castShadow = true; g.add(cab);
+            const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.68, 1.6, 0.65), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+            mirror.position.y = 0.95; g.add(mirror);
+            const crown = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.12, 0.66), matAccent);
+            crown.position.y = 1.92; g.add(crown);
         } else if (id === 'cattree') {
-            const base = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.12, 0.85), matMain);
-            base.position.y = 0.06; g.add(base);
-            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 1.45, 10), matWood);
-            post.position.y = 0.75; g.add(post);
-            const house = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.52, 0.62), matMain);
-            house.position.y = 0.45; house.castShadow = true; g.add(house);
-            const topBed = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.34, 0.14, 14), matMain);
-            topBed.position.y = 1.48; g.add(topBed);
-            // Baloo & Bagheera Food Bowls
-            const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.08, 12), new THREE.MeshLambertMaterial({ color: 0x38bdf8 }));
-            b1.position.set(0.58, 0.04, 0.2); g.add(b1);
-            const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.08, 12), new THREE.MeshLambertMaterial({ color: 0xf43f5e }));
-            b2.position.set(0.58, 0.04, -0.2); g.add(b2);
+            const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.14, 0.9), matMain);
+            base.position.y = 0.07; g.add(base);
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.5, 10), matWood);
+            post.position.y = 0.78; g.add(post);
+            const house = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.55, 0.66), matMain);
+            house.position.y = 0.46; house.castShadow = true; g.add(house);
+            const topBed = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.36, 0.16, 14), matAccent);
+            topBed.position.y = 1.52; g.add(topBed);
+            const b1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.09, 12), new THREE.MeshLambertMaterial({ color: 0x38bdf8 }));
+            b1.position.set(0.62, 0.05, 0.22); g.add(b1);
+            const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.09, 12), new THREE.MeshLambertMaterial({ color: 0xf43f5e }));
+            b2.position.set(0.62, 0.05, -0.22); g.add(b2);
         } else if (id === 'kitchen') {
-            const counter = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.82, 0.68), matMain);
-            counter.position.y = 0.41; counter.castShadow = true; g.add(counter);
-            const top = new THREE.Mesh(new THREE.BoxGeometry(2.86, 0.08, 0.72), matWhite);
-            top.position.y = 0.85; g.add(top);
-            const fridge = new THREE.Mesh(new THREE.BoxGeometry(0.78, 1.78, 0.74), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
-            fridge.position.set(-1.75, 0.89, 0); fridge.castShadow = true; g.add(fridge);
+            const counter = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.85, 0.72), matMain);
+            counter.position.y = 0.42; counter.castShadow = true; g.add(counter);
+            const top = new THREE.Mesh(new THREE.BoxGeometry(2.96, 0.09, 0.76), matAccent);
+            top.position.y = 0.87; g.add(top);
+            const fridge = new THREE.Mesh(new THREE.BoxGeometry(0.82, 1.85, 0.78), matWhite);
+            fridge.position.set(-1.82, 0.92, 0); fridge.castShadow = true; g.add(fridge);
         } else if (id === 'dining') {
-            const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.88, 0.08, 22), matWhite);
-            tbl.position.y = 0.74; tbl.castShadow = true; g.add(tbl);
-            const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.32, 0.72, 12), matWood);
-            ped.position.y = 0.36; g.add(ped);
-            // Blue Tray with Belgian Waffles & Ice Cream + Tatar Teapot
-            const tray = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.05, 0.4), matMain);
-            tray.position.set(-0.15, 0.8, 0); g.add(tray);
-            const scoop1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshLambertMaterial({ color: 0xbef264 }));
-            scoop1.position.set(-0.2, 0.88, 0); g.add(scoop1);
-            const scoop2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshLambertMaterial({ color: 0xfed7aa }));
-            scoop2.position.set(-0.08, 0.88, 0); g.add(scoop2);
-            const teapot = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 10), new THREE.MeshLambertMaterial({ color: 0x10b981 }));
-            teapot.position.set(0.28, 0.88, 0.1); g.add(teapot);
+            const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 0.92, 0.09, 24), matAccent);
+            tbl.position.y = 0.76; tbl.castShadow = true; g.add(tbl);
+            const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.35, 0.74, 12), matWood);
+            ped.position.y = 0.37; g.add(ped);
+            const tray = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.44), matMain);
+            tray.position.set(-0.15, 0.82, 0); g.add(tray);
+            const scoop1 = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), new THREE.MeshLambertMaterial({ color: 0xbef264 }));
+            scoop1.position.set(-0.2, 0.9, 0); g.add(scoop1);
+            const scoop2 = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), new THREE.MeshLambertMaterial({ color: 0xfed7aa }));
+            scoop2.position.set(-0.06, 0.9, 0); g.add(scoop2);
+            const teapot = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), matMain);
+            teapot.position.set(0.28, 0.9, 0.1); g.add(teapot);
         } else if (id === 'balcony') {
-            const rug = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.04, 1.0), matMain);
-            rug.position.y = 0.02; g.add(rug);
-            const chair = new THREE.Mesh(new THREE.SphereGeometry(0.52, 12, 12), matWood);
-            chair.position.set(-0.6, 0.58, 0); chair.castShadow = true; g.add(chair);
-            const cushion = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), matMain);
-            cushion.position.set(-0.55, 0.55, 0.08); g.add(cushion);
+            const rug = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.05, 1.05), matMain);
+            rug.position.y = 0.025; g.add(rug);
+            const chair = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 12), matWood);
+            chair.position.set(-0.6, 0.6, 0); chair.castShadow = true; g.add(chair);
+            const cushion = new THREE.Mesh(new THREE.SphereGeometry(0.45, 10, 10), matAccent);
+            cushion.position.set(-0.55, 0.58, 0.1); g.add(cushion);
         } else if (id === 'bath') {
-            const tub = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.62, 1.75), matWhite);
-            tub.position.set(-0.1, 0.31, 0.1); tub.castShadow = true; g.add(tub);
-            const water = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.08, 1.55), matMain);
-            water.position.set(-0.1, 0.58, 0.1); g.add(water);
-            // Washer in Room #5
-            const washer = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.85, 0.65), matWhite);
-            washer.position.set(2.1, 0.42, -0.2); washer.castShadow = true; g.add(washer);
+            const tub = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.65, 1.85), matWhite);
+            tub.position.set(-0.1, 0.32, 0.1); tub.castShadow = true; g.add(tub);
+            const water = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.09, 1.65), matMain);
+            water.position.set(-0.1, 0.6, 0.1); g.add(water);
+            const mat = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 1.2), matAccent);
+            mat.position.set(0.85, 0.02, 0.1); g.add(mat);
+            const washer = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.88, 0.68), matWhite);
+            washer.position.set(2.1, 0.44, -0.2); washer.castShadow = true; g.add(washer);
         } else if (id === 'toilet') {
-            const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.2, 0.44, 14), matWhite);
-            bowl.position.y = 0.22; g.add(bowl);
-            const tank = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.48, 0.22), matMain);
-            tank.position.set(0, 0.58, -0.18); g.add(tank);
+            const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.46, 14), matWhite);
+            bowl.position.y = 0.23; g.add(bowl);
+            const tank = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.52, 0.24), matMain);
+            tank.position.set(0, 0.6, -0.18); g.add(tank);
+            const lid = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.26), matAccent);
+            lid.position.set(0, 0.88, -0.18); g.add(lid);
         } else if (id === 'hallway') {
-            const bench = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.44, 0.52), matMain);
-            bench.position.set(0, 0.22, -0.45); bench.castShadow = true; g.add(bench);
-            const runner1 = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.03, 0.85), matMain);
+            const bench = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.46, 0.56), matMain);
+            bench.position.set(0, 0.23, -0.45); bench.castShadow = true; g.add(bench);
+            const runner1 = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.04, 0.9), matAccent);
             runner1.position.set(0.3, 0.02, 0.15); g.add(runner1);
-            const runner2 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.03, 0.8), matMain);
+            const runner2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.04, 0.85), matMain);
             runner2.position.set(4.5, 0.02, 0.0); g.add(runner2);
         }
     }
 
     /*************************************************************************
-     * 8. DOORWAY PATHFINDING FOR DARINA AND CATS (ZERO WALL CLIPPING!)
+     * 8. DOORWAY PATHFINDING FOR DARINA AND CATS (2X APARTMENT SCALE)
      *************************************************************************/
     function getRoomNumberAt3D(x, z) {
-        if (z < -2.0) {
-            if (x < -2.5) return 7; // Bathroom
-            if (x < -1.2) return 5; // Storage
-            return 6;               // Toilet
+        const ux = x / APT_SCALE;
+        const uz = z / APT_SCALE;
+        if (uz < -2.0) {
+            if (ux < -2.5) return 7; // Bathroom
+            if (ux < -1.2) return 5; // Storage
+            return 6;                // Toilet
         }
-        if (x < -1.2) {
-            if (z < -0.2) return 4; // Hallway #4
-            return 3;               // Kitchen #3
+        if (ux < -1.2) {
+            if (uz < -0.2) return 4; // Hallway #4
+            return 3;                // Kitchen #3
         }
-        if (x < 2.2) {
-            if (z < -0.4) return 8; // Corridor #8
-            return 2;               // Bedroom #2
+        if (ux < 2.2) {
+            if (uz < -0.4) return 8; // Corridor #8
+            return 2;                // Bedroom #2
         }
-        return 1;                   // Living Room #1
+        return 1;                    // Living Room #1
     }
 
-    // Shared doorway pathfinding used by BOTH Darina AND Baloo/Bagheera so nobody ever walks through walls!
     function buildDoorwayPath3D(sx, sz, ex, ez) {
         const sr = getRoomNumberAt3D(sx, sz);
         const er = getRoomNumberAt3D(ex, ez);
         if (sr === er) return [{ x: ex, z: ez }];
 
-        const P_KITCHEN_HALL = { x: -4.75, z: -0.2 };
-        const P_BATH_HALL    = { x: -3.6,  z: -2.0 };
-        const P_STOR_HALL    = { x: -1.85, z: -2.0 };
-        const P_HALL_CORR    = { x: -1.2,  z: -1.1 };
-        const P_TOILET_CORR  = { x: -0.58, z: -2.0 };
-        const P_BED_CORR     = { x: -0.18, z: -0.4 };
-        const P_LIVING_CORR  = { x:  2.2,  z: -1.15 };
+        const S = APT_SCALE;
+        const P_KITCHEN_HALL = { x: -4.75 * S, z: -0.2 * S };
+        const P_BATH_HALL    = { x: -3.6 * S,  z: -2.0 * S };
+        const P_STOR_HALL    = { x: -1.85 * S, z: -2.0 * S };
+        const P_HALL_CORR    = { x: -1.2 * S,  z: -1.1 * S };
+        const P_TOILET_CORR  = { x: -0.58 * S, z: -2.0 * S };
+        const P_BED_CORR     = { x: -0.18 * S, z: -0.4 * S };
+        const P_LIVING_CORR  = { x:  2.2 * S,  z: -1.15 * S };
 
         const wps = [];
         let curHub = sr;
 
-        if (sr === 3) { wps.push(P_KITCHEN_HALL, { x: -3.6, z: -1.1 }); curHub = 4; }
-        else if (sr === 7) { wps.push(P_BATH_HALL, { x: -3.6, z: -1.1 }); curHub = 4; }
-        else if (sr === 5) { wps.push(P_STOR_HALL, { x: -1.85, z: -1.1 }); curHub = 4; }
-        else if (sr === 6) { wps.push(P_TOILET_CORR, { x: -0.2, z: -1.15 }); curHub = 8; }
-        else if (sr === 2) { wps.push(P_BED_CORR, { x: 0.2, z: -1.15 }); curHub = 8; }
-        else if (sr === 1) { wps.push(P_LIVING_CORR, { x: 1.0, z: -1.15 }); curHub = 8; }
+        if (sr === 3) { wps.push(P_KITCHEN_HALL, { x: -3.6 * S, z: -1.1 * S }); curHub = 4; }
+        else if (sr === 7) { wps.push(P_BATH_HALL, { x: -3.6 * S, z: -1.1 * S }); curHub = 4; }
+        else if (sr === 5) { wps.push(P_STOR_HALL, { x: -1.85 * S, z: -1.1 * S }); curHub = 4; }
+        else if (sr === 6) { wps.push(P_TOILET_CORR, { x: -0.2 * S, z: -1.15 * S }); curHub = 8; }
+        else if (sr === 2) { wps.push(P_BED_CORR, { x: 0.2 * S, z: -1.15 * S }); curHub = 8; }
+        else if (sr === 1) { wps.push(P_LIVING_CORR, { x: 1.0 * S, z: -1.15 * S }); curHub = 8; }
 
         const targetHub = (er === 3 || er === 7 || er === 5 || er === 4) ? 4 : 8;
         if (curHub === 4 && targetHub === 8) {
-            wps.push(P_HALL_CORR, { x: 0.2, z: -1.15 });
+            wps.push(P_HALL_CORR, { x: 0.2 * S, z: -1.15 * S });
         } else if (curHub === 8 && targetHub === 4) {
-            wps.push(P_HALL_CORR, { x: -2.8, z: -1.1 });
+            wps.push(P_HALL_CORR, { x: -2.8 * S, z: -1.1 * S });
         }
 
-        if (er === 3) wps.push({ x: -4.75, z: -1.0 }, P_KITCHEN_HALL);
-        else if (er === 7) wps.push({ x: -3.6, z: -1.3 }, P_BATH_HALL);
-        else if (er === 5) wps.push({ x: -1.85, z: -1.3 }, P_STOR_HALL);
-        else if (er === 6) wps.push({ x: -0.58, z: -1.3 }, P_TOILET_CORR);
-        else if (er === 2) wps.push({ x: -0.18, z: -1.15 }, P_BED_CORR);
-        else if (er === 1) wps.push({ x: 1.2, z: -1.15 }, P_LIVING_CORR);
+        if (er === 3) wps.push({ x: -4.75 * S, z: -1.0 * S }, P_KITCHEN_HALL);
+        else if (er === 7) wps.push({ x: -3.6 * S, z: -1.3 * S }, P_BATH_HALL);
+        else if (er === 5) wps.push({ x: -1.85 * S, z: -1.3 * S }, P_STOR_HALL);
+        else if (er === 6) wps.push({ x: -0.58 * S, z: -1.3 * S }, P_TOILET_CORR);
+        else if (er === 2) wps.push({ x: -0.18 * S, z: -1.15 * S }, P_BED_CORR);
+        else if (er === 1) wps.push({ x: 1.2 * S, z: -1.15 * S }, P_LIVING_CORR);
 
         wps.push({ x: ex, z: ez });
         return wps;
     }
 
     /*************************************************************************
-     * 9. 3D HIERARCHICAL DARINA + BALOO & BAGHEERA WITH FLOATING SPEECH BUBBLES
+     * 9. 3D HIERARCHICAL DARINA (WITH CLEAR EXPRESSIVE EYES) + BALOO & BAGHEERA
      *************************************************************************/
     const darina3D = {
         group: null,
+        headGroup: null,
+        eyesGroup: null,
+        browsGroup: null,
         leftLegPivot: null,
         rightLegPivot: null,
         leftArmPivot: null,
         rightArmPivot: null,
-        x: 3.6, z: 1.8,
+        x: 7.2, z: 3.6,
         rotY: 0,
         walking: false,
         walkPhase: 0,
+        blinkTimer: 2.4,
+        isBlinking: false,
         pathQueue: [],
         bubbleText: '',
         bubbleTimer: 0
     };
 
-    //Safe interior waypoints inside rooms so cats stroll naturally through doors and NEVER touch walls
     const SAFE_CAT_SPOTS = [
-        { x: 3.8, z: 2.6, room: 1 },
-        { x: 5.2, z: 0.6, room: 1 },
-        { x: 3.4, z: -0.4, room: 1 },
-        { x: 0.2, z: 2.8, room: 2 },
-        { x: -0.3, z: 0.8, room: 2 },
-        { x: -3.6, z: 2.2, room: 3 },
-        { x: -5.0, z: 1.4, room: 3 },
-        { x: -2.8, z: -1.1, room: 4 },
-        { x: 0.5, z: -1.15, room: 8 }
+        { x: 7.6, z: 5.2, room: 1 },
+        { x: 10.4, z: 1.2, room: 1 },
+        { x: 6.8, z: -0.8, room: 1 },
+        { x: 0.4, z: 5.6, room: 2 },
+        { x: -0.6, z: 1.6, room: 2 },
+        { x: -7.2, z: 4.4, room: 3 },
+        { x: -10.0, z: 2.8, room: 3 },
+        { x: -5.6, z: -2.2, room: 4 },
+        { x: 1.0, z: -2.3, room: 8 }
     ];
 
     const CAT_RANDOM_PHRASES = {
         baloo: [
             'Мяу, хочу есть! 🍗',
-            'Мурр... как тепло дома! 💚',
+            'Мурр... как просторно стало! 💚',
             'На улице -42°C, я под плед!',
             'Пахнет вафлями со сливками? 🧇',
             'Дарина навела идеальный порядок!',
@@ -1957,23 +2074,23 @@
     };
 
     const DARINA_AUTONOMOUS_LINES = [
-        '«Люблю, когда каждая вещь лежит строго на своём месте!»',
+        '«Люблю, когда в нашей просторной двушке идеальный порядок!»',
         '«За окном ГРЭС парит на морозе, а у нас дома тепло и пахнет чаем!»',
         '«Балу и Багира — наши главные пушистые ревизоры!»',
-        '«Сейчас ещё пару звёзд заработаем — и купим обновку в квартиру!»'
+        '«Нажми на любую мебель — примерим все 3 стиля!»'
     ];
 
     const cats3D = [
         {
             id: 'baloo', name: 'Балу', isRussianBlue: true,
-            group: null, x: 3.5, z: 2.7, rotY: 0.5,
+            group: null, x: 7.0, z: 5.4, rotY: 0.5,
             walkPhase: 0, pauseTimer: 260,
             pathQueue: [],
-            bubbleText: 'Мурр! Наш тёплый дом! 💚', bubbleTimer: 210
+            bubbleText: 'Мурр! Наш просторный дом! 💚', bubbleTimer: 210
         },
         {
             id: 'bagheera', name: 'Багира', isRussianBlue: false,
-            group: null, x: 0.1, z: 2.7, rotY: -0.5,
+            group: null, x: 0.2, z: 5.4, rotY: -0.5,
             walkPhase: 0, pauseTimer: 340,
             pathQueue: [],
             bubbleText: 'Мяу, хочу есть! 🍗', bubbleTimer: 240
@@ -1981,20 +2098,25 @@
     ];
 
     function buildActors3D() {
-        // 1. Hierarchical 3D Model of Darina
+        // 1. Hierarchical 3D Model of Darina (Scaled 1.35x with High-Contrast Visible Eyes outside head sphere!)
         const dGroup = new THREE.Group();
+        dGroup.add(createContactShadowDisc(0.45, 0.45, 0.32));
 
         const skinMat  = new THREE.MeshLambertMaterial({ color: 0xf5cba7 });
-        const hairMat  = new THREE.MeshLambertMaterial({ color: 0x2c1810 });
+        const hairMat  = new THREE.MeshLambertMaterial({ color: 0x2a160d });
         const shirtMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
         const jeansMat = new THREE.MeshLambertMaterial({ color: 0x1d4ed8 });
+        const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const irisMat  = new THREE.MeshBasicMaterial({ color: 0x451a03 });
+        const pupilMat = new THREE.MeshBasicMaterial({ color: 0x09090b });
+        const lashMat  = new THREE.MeshBasicMaterial({ color: 0x111827 });
+        const lipMat   = new THREE.MeshBasicMaterial({ color: 0xe11d48 });
+        const blushMat = new THREE.MeshBasicMaterial({ color: 0xf472b6, transparent: true, opacity: 0.55 });
 
-        // Pelvis Bridge
         const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.19, 0.22, 12), jeansMat);
         pelvis.position.y = 0.62;
         dGroup.add(pelvis);
 
-        // Left & Right Leg Pivots at Hip Socket (y = 0.58) - Impossible to detach!
         const leftLegPivot = new THREE.Group();
         leftLegPivot.position.set(-0.09, 0.58, 0);
         const lLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.065, 0.54, 10), jeansMat);
@@ -2013,13 +2135,15 @@
         rightLegPivot.add(rLeg, rShoe);
         dGroup.add(rightLegPivot);
 
-        // White T-Shirt Torso
         const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.18, 0.5, 12), shirtMat);
         torso.position.y = 0.92;
         torso.castShadow = true;
         dGroup.add(torso);
 
-        // Left & Right Arm Pivots at Shoulder Socket (y = 1.12)
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.14, 10), skinMat);
+        neck.position.y = 1.20;
+        dGroup.add(neck);
+
         const leftArmPivot = new THREE.Group();
         leftArmPivot.position.set(-0.24, 1.12, 0);
         const lArm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.42, 8), skinMat);
@@ -2036,26 +2160,105 @@
         rightArmPivot.add(rArm, tablet);
         dGroup.add(rightArmPivot);
 
-        // Head, Dark Brown Wavy Tatar Hair & Sunglasses Perched on Top
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 14, 14), skinMat);
-        head.position.y = 1.36;
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 1.40;
+
+        // Head Sphere radius = 0.22
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 20), skinMat);
         head.castShadow = true;
-        dGroup.add(head);
+        headGroup.add(head);
 
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.23, 12, 12), hairMat);
-        hairBack.position.set(0, 1.38, -0.05);
-        hairBack.scale.set(1.05, 1.25, 1.05);
-        dGroup.add(hairBack);
+        // Wavy Dark-Brown Tatar Hair (Kept behind face so it NEVER covers the eyes!)
+        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.235, 16, 16), hairMat);
+        hairBack.position.set(0, 0.03, -0.055);
+        hairBack.scale.set(1.06, 1.15, 1.02);
+        headGroup.add(hairBack);
 
-        // Sunglasses on top of head (like Darina's photo)
-        const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.07, 0.12), new THREE.MeshLambertMaterial({ color: 0x111827 }));
-        glasses.position.set(0, 1.56, 0.08);
-        dGroup.add(glasses);
+        [-0.185, 0.185].forEach(hx => {
+            const wave = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.09, 0.40, 10), hairMat);
+            wave.position.set(hx, -0.12, -0.03);
+            wave.rotation.z = hx < 0 ? 0.18 : -0.18;
+            headGroup.add(wave);
+        });
 
-        dGroup.position.set(darina3D.x, 0.06, darina3D.z);
+        // Large, Expressive 3D Eyes placed clearly OUTSIDE head radius (z = 0.215 .. 0.255)
+        const eyesGroup = new THREE.Group();
+        [-0.078, 0.078].forEach(ex => {
+            const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.046, 14, 14), whiteMat);
+            sclera.position.set(ex, 0.028, 0.205);
+            sclera.scale.set(1.18, 0.96, 0.65);
+            eyesGroup.add(sclera);
+
+            const iris = new THREE.Mesh(new THREE.SphereGeometry(0.031, 12, 12), irisMat);
+            iris.position.set(ex, 0.028, 0.228);
+            iris.scale.set(1.0, 1.0, 0.5);
+            eyesGroup.add(iris);
+
+            const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.019, 10, 10), pupilMat);
+            pupil.position.set(ex, 0.028, 0.240);
+            pupil.scale.set(1.0, 1.0, 0.45);
+            eyesGroup.add(pupil);
+
+            const sparkle = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 8), whiteMat);
+            sparkle.position.set(ex + (ex < 0 ? -0.01 : 0.01), 0.040, 0.249);
+            eyesGroup.add(sparkle);
+
+            const lash = new THREE.Mesh(new THREE.BoxGeometry(0.082, 0.015, 0.025), lashMat);
+            lash.position.set(ex, 0.066, 0.222);
+            lash.rotation.z = ex < 0 ? 0.08 : -0.08;
+            eyesGroup.add(lash);
+        });
+        headGroup.add(eyesGroup);
+
+        const browsGroup = new THREE.Group();
+        [-0.078, 0.078].forEach(bx => {
+            const brow = new THREE.Mesh(new THREE.BoxGeometry(0.084, 0.018, 0.025), hairMat);
+            brow.position.set(bx, 0.102, 0.215);
+            brow.rotation.z = bx < 0 ? -0.08 : 0.08;
+            browsGroup.add(brow);
+        });
+        headGroup.add(browsGroup);
+
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 10), skinMat);
+        nose.position.set(0, -0.012, 0.232);
+        headGroup.add(nose);
+
+        [-0.115, 0.115].forEach(cx => {
+            const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 10), blushMat);
+            cheek.position.set(cx, -0.026, 0.205);
+            cheek.scale.set(1.2, 0.78, 0.45);
+            headGroup.add(cheek);
+        });
+
+        const smile = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.011, 8, 16, Math.PI), lipMat);
+        smile.position.set(0, -0.055, 0.218);
+        smile.rotation.x = Math.PI;
+        headGroup.add(smile);
+
+        // Signature Sunglasses Perched on Top of Her Head
+        const glassesGroup = new THREE.Group();
+        const frameMat = new THREE.MeshLambertMaterial({ color: 0x111827 });
+        const goldRimMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+        [-0.078, 0.078].forEach(gx => {
+            const lens = new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.068, 0.032), frameMat);
+            lens.position.set(gx, 0.205, 0.115);
+            lens.rotation.x = -0.32;
+            glassesGroup.add(lens);
+        });
+        const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.015, 0.022), goldRimMat);
+        bridge.position.set(0, 0.208, 0.125);
+        glassesGroup.add(bridge);
+        headGroup.add(glassesGroup);
+
+        dGroup.add(headGroup);
+        dGroup.scale.set(1.32, 1.32, 1.32);
+        dGroup.position.set(darina3D.x, 0.07, darina3D.z);
         scene.add(dGroup);
 
         darina3D.group = dGroup;
+        darina3D.headGroup = headGroup;
+        darina3D.eyesGroup = eyesGroup;
+        darina3D.browsGroup = browsGroup;
         darina3D.leftLegPivot = leftLegPivot;
         darina3D.rightLegPivot = rightLegPivot;
         darina3D.leftArmPivot = leftArmPivot;
@@ -2064,49 +2267,82 @@
         // 2. Build 3D Cats: Baloo (Russian Blue) & Bagheera (Sleek Black Cat)
         cats3D.forEach(cat => {
             const cGroup = new THREE.Group();
+            cGroup.add(createContactShadowDisc(0.28, 0.38, 0.28));
             const furMat = new THREE.MeshLambertMaterial({ color: cat.isRussianBlue ? 0x64748b : 0x18181b });
             const eyeMat = new THREE.MeshBasicMaterial({ color: cat.isRussianBlue ? 0x10b981 : 0xfbbf24 });
 
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.2, 0.44), furMat);
-            body.position.y = 0.2;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.48), furMat);
+            body.position.y = 0.22;
             body.castShadow = true;
             cGroup.add(body);
 
-            const cHead = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 10), furMat);
-            cHead.position.set(0, 0.32, 0.22);
+            const cHead = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 12), furMat);
+            cHead.position.set(0, 0.35, 0.24);
             cGroup.add(cHead);
 
-            // Ears
-            [-0.08, 0.08].forEach(ex => {
-                const ear = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.11, 4), furMat);
-                ear.position.set(ex, 0.44, 0.22);
+            [-0.085, 0.085].forEach(ex => {
+                const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.12, 4), furMat);
+                ear.position.set(ex, 0.48, 0.24);
                 cGroup.add(ear);
-                const eye = new THREE.Mesh(new THREE.SphereGeometry(0.026, 6, 6), eyeMat);
-                eye.position.set(ex * 0.7, 0.34, 0.34);
+                const eye = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeMat);
+                eye.position.set(ex * 0.72, 0.37, 0.37);
                 cGroup.add(eye);
             });
 
-            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.32, 6), furMat);
-            tail.position.set(0, 0.32, -0.24);
+            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.36, 6), furMat);
+            tail.position.set(0, 0.34, -0.26);
             tail.rotation.x = -0.6;
             cGroup.add(tail);
 
-            cGroup.position.set(cat.x, 0.06, cat.z);
+            cGroup.scale.set(1.25, 1.25, 1.25);
+            cGroup.position.set(cat.x, 0.07, cat.z);
             scene.add(cGroup);
             cat.group = cGroup;
         });
     }
 
     /*************************************************************************
-     * 10. VIEWPORT CAMERA ORBIT, FLOOR RAYCASTING & CALM WALKING LOOP
+     * 10. VIEWPORT CAMERA ORBIT, DEEP ZOOM (PINCH + BUTTONS) & FLOOR RAYCASTING
      *************************************************************************/
+    function getRaycasterNormalizedCoords(clientX, clientY) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        if (window.innerWidth < window.innerHeight) {
+            const lp = getLogicalPoint(clientX, clientY);
+            return {
+                x: (lp.x / lp.w) * 2 - 1,
+                y: -(lp.y / lp.h) * 2 + 1
+            };
+        }
+        return {
+            x: ((clientX - rect.left) / rect.width) * 2 - 1,
+            y: -((clientY - rect.top) / rect.height) * 2 + 1
+        };
+    }
+
+    function zoomCameraBy(deltaDist) {
+        playSound('tap');
+        camDesiredDist = Math.max(CAM_MIN_DIST, Math.min(CAM_MAX_DIST, camDesiredDist + deltaDist));
+        camDesiredHeight = Math.max(2.6, camDesiredDist * 0.78);
+    }
+
     function setupViewportInteractions(container) {
         let isDragging = false;
         let startPt = { x: 0, y: 0 };
         let startTarget = new THREE.Vector3();
         let downTime = 0;
+        let pinchStartDist = 0;
+        let pinchStartCamDist = 22.0;
+
+        // Prevent clicks inside #style-selector-panel from ever reaching the 3D canvas
+        const stylePanel = document.getElementById('style-selector-panel');
+        if (stylePanel) {
+            ['pointerdown', 'pointerup', 'click', 'touchstart', 'touchend'].forEach(evName => {
+                stylePanel.addEventListener(evName, (ev) => ev.stopPropagation());
+            });
+        }
 
         container.addEventListener('pointerdown', (e) => {
+            if (e.target !== renderer.domElement && e.target !== container) return;
             isDragging = true;
             const lp = getLogicalPoint(e.clientX, e.clientY);
             startPt = { x: lp.x, y: lp.y };
@@ -2117,13 +2353,14 @@
         window.addEventListener('pointermove', (e) => {
             if (!isDragging) return;
             const lp = getLogicalPoint(e.clientX, e.clientY);
-            const dx = (lp.x - startPt.x) * 0.014;
-            const dy = (lp.y - startPt.y) * 0.014;
+            const panScale = 0.0011 * camDist;
+            const dx = (lp.x - startPt.x) * panScale;
+            const dy = (lp.y - startPt.y) * panScale;
 
             const cosA = Math.cos(camAngle);
             const sinA = Math.sin(camAngle);
-            camDesiredTarget.x = Math.max(-6.5, Math.min(6.5, startTarget.x - (dx * cosA + dy * sinA)));
-            camDesiredTarget.z = Math.max(-4.5, Math.min(5.5, startTarget.z - (dy * cosA - dx * sinA)));
+            camDesiredTarget.x = Math.max(-13.0, Math.min(13.5, startTarget.x - (dx * cosA + dy * sinA)));
+            camDesiredTarget.z = Math.max(-9.5, Math.min(11.5, startTarget.z - (dy * cosA - dx * sinA)));
         });
 
         window.addEventListener('pointerup', (e) => {
@@ -2133,10 +2370,21 @@
             const dist = Math.hypot(lp.x - startPt.x, lp.y - startPt.y);
             const elapsed = Date.now() - downTime;
 
-            if (dist < 12 && elapsed < 320) {
-                const ndcX = (lp.x / lp.w) * 2 - 1;
-                const ndcY = -(lp.y / lp.h) * 2 + 1;
-                raycaster.setFromCamera({ x: ndcX, y: ndcY }, camera);
+            if (dist < 16 && elapsed < 420) {
+                const ndc = getRaycasterNormalizedCoords(e.clientX, e.clientY);
+                raycaster.setFromCamera(ndc, camera);
+
+                const furnHits = raycaster.intersectObjects(clickableFurnitureObjects, true);
+                if (furnHits.length > 0) {
+                    let obj = furnHits[0].object;
+                    while (obj && !obj.userData?.furnitureId && obj.parent) {
+                        obj = obj.parent;
+                    }
+                    if (obj && obj.userData?.furnitureId) {
+                        onTapFurnitureZone(obj.userData.furnitureId);
+                        return;
+                    }
+                }
 
                 const hits = raycaster.intersectObjects(clickableFloorObjects, false);
                 if (hits.length > 0) {
@@ -2146,6 +2394,34 @@
                 }
             }
         });
+
+        // Mouse wheel zoom support
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            zoomCameraBy(e.deltaY > 0 ? 2.2 : -2.2);
+        }, { passive: false });
+
+        // 2-Finger Pinch-to-Zoom on mobile touchscreens
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                isDragging = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                pinchStartDist = Math.hypot(dx, dy);
+                pinchStartCamDist = camDesiredDist;
+            }
+        }, { passive: true });
+
+        container.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && pinchStartDist > 10) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const curDist = Math.hypot(dx, dy);
+                const ratio = pinchStartDist / Math.max(20, curDist);
+                camDesiredDist = Math.max(CAM_MIN_DIST, Math.min(CAM_MAX_DIST, pinchStartCamDist * ratio));
+                camDesiredHeight = Math.max(2.6, camDesiredDist * 0.78);
+            }
+        }, { passive: true });
     }
 
     function rotateCameraBy(deltaRad) {
@@ -2156,11 +2432,11 @@
     function focusBtiRoom(roomNum) {
         playSound('tap');
         const presets = {
-            0: { x: 0.3,  z: 0.8,  dist: 16.5, h: 13.8, walk: null, msg: '«Панорама всей нашей 3D-двушки и зимнего Нерюнгри с ГРЭС на горизонте!»' },
-            1: { x: 4.4,  z: 1.4,  dist: 10.5, h: 9.2,  walk: { x: 4.0, z: 1.8 }, msg: '«Зал №1 (17,4 м²) — сердце нашей квартиры!»' },
-            2: { x: 0.4,  z: 1.8,  dist: 10.0, h: 8.8,  walk: { x: 0.2, z: 1.2 }, msg: '«Спальня №2 (10,5 м²) — уют и покой!»' },
-            3: { x: -3.8, z: 2.2,  dist: 10.5, h: 9.2,  walk: { x: -3.8, z: 1.8 }, msg: '«Кухня №3 (10,4 м²) с тёплым балконом и ароматом вафель!»' },
-            7: { x: -2.5, z: -2.2, dist: 10.5, h: 9.2,  walk: { x: -3.2, z: -1.2 }, msg: '«Ванная №7, Санузел №6 и Прихожая №4!»' }
+            0: { x: 0.6,  z: 1.5,  dist: 24.5, h: 19.5, walk: null, msg: '«Панорама всей нашей увеличенной в 2 раза 3D-двушки и Нерюнгри!»' },
+            1: { x: 8.8,  z: 2.8,  dist: 12.5, h: 9.8,  walk: { x: 8.0, z: 3.6 }, msg: '«Зал №1 (17,4 м²) — теперь такой просторный и светлый!»' },
+            2: { x: 0.8,  z: 3.6,  dist: 11.5, h: 9.0,  walk: { x: 0.4, z: 2.4 }, msg: '«Спальня №2 (10,5 м²) — уют и королевский простор!»' },
+            3: { x: -7.6, z: 4.4,  dist: 12.5, h: 9.8,  walk: { x: -7.6, z: 3.6 }, msg: '«Кухня №3 (10,4 м²) с тёплым балконом и ароматом вафель!»' },
+            7: { x: -5.0, z: -4.4, dist: 12.0, h: 9.5,  walk: { x: -6.4, z: -2.4 }, msg: '«Ванная №7, Санузел №6 и Прихожая №4!»' }
         };
         const p = presets[roomNum] || presets[0];
         camDesiredTarget.set(p.x, 0, p.z);
@@ -2171,12 +2447,12 @@
     }
 
     function commandDarinaWalkTo3D(tx, tz) {
-        const cx = Math.max(-5.8, Math.min(6.0, tx));
-        const cz = Math.max(-4.0, Math.min(5.2, tz));
+        const cx = Math.max(-11.8, Math.min(12.2, tx));
+        const cz = Math.max(-8.2, Math.min(10.5, tz));
         darina3D.pathQueue = buildDoorwayPath3D(darina3D.x, darina3D.z, cx, cz);
 
         if (targetRingMesh) {
-            targetRingMesh.position.set(cx, 0.08, cz);
+            targetRingMesh.position.set(cx, 0.09, cz);
             targetRingMesh.visible = true;
             setTimeout(() => { if (targetRingMesh) targetRingMesh.visible = false; }, 900);
         }
@@ -2184,10 +2460,10 @@
 
     function project3DToScreen(vec3) {
         const v = vec3.clone().project(camera);
-        const lp = getLogicalPoint(0, 0);
+        const vp = getLogicalViewport();
         return {
-            x: (v.x * 0.5 + 0.5) * lp.w,
-            y: (-(v.y * 0.5) + 0.5) * lp.h,
+            x: (v.x * 0.5 + 0.5) * vp.w,
+            y: (-(v.y * 0.5) + 0.5) * vp.h,
             visible: v.z < 1
         };
     }
@@ -2255,11 +2531,10 @@
             const dz = wp.z - darina3D.z;
             const dist = Math.hypot(dx, dz);
 
-            // Calm human walking speed: 2.35 units/sec (Previously was much faster)
-            const walkSpeed = 2.35;
-            if (dist > 0.08) {
+            const walkSpeed = 4.2; // Proportional to 2X apartment scale
+            if (dist > 0.12) {
                 darina3D.walking = true;
-                darina3D.walkPhase += dt * 7.2;
+                darina3D.walkPhase += dt * 7.5;
                 darina3D.x += (dx / dist) * Math.min(dist, walkSpeed * dt);
                 darina3D.z += (dz / dist) * Math.min(dist, walkSpeed * dt);
                 darina3D.rotY = Math.atan2(dx, dz);
@@ -2275,6 +2550,30 @@
         } else {
             darina3D.walking = false;
             darina3D.walkPhase = 0;
+            // Face the active camera position so Darina's eyes and smile are ALWAYS clearly visible!
+            const toCamX = camera.position.x - darina3D.x;
+            const toCamZ = camera.position.z - darina3D.z;
+            const desiredFaceAngle = Math.atan2(toCamX, toCamZ);
+            const diffAngle = desiredFaceAngle - darina3D.rotY;
+            darina3D.rotY += Math.atan2(Math.sin(diffAngle), Math.cos(diffAngle)) * 0.12;
+        }
+
+        // Natural Eye Blinking & Subtle Head Breathing Animation
+        darina3D.blinkTimer -= dt;
+        if (darina3D.blinkTimer <= 0) {
+            if (!darina3D.isBlinking) {
+                darina3D.isBlinking = true;
+                darina3D.blinkTimer = 0.13; // Close eyes briefly
+            } else {
+                darina3D.isBlinking = false;
+                darina3D.blinkTimer = 2.6 + Math.random() * 2.2;
+            }
+        }
+        if (darina3D.eyesGroup) {
+            darina3D.eyesGroup.scale.y = darina3D.isBlinking ? 0.12 : 1.0;
+        }
+        if (darina3D.browsGroup) {
+            darina3D.browsGroup.position.y = Math.sin(now * 0.003) * 0.004;
         }
 
         if (darina3D.group) {
@@ -2305,10 +2604,9 @@
                 const dx = wp.x - cat.x;
                 const dz = wp.z - cat.z;
                 const dist = Math.hypot(dx, dz);
-                // Slow, relaxed cat stroll: 0.92 units/sec
-                const catSpeed = 0.92;
+                const catSpeed = 1.65;
 
-                if (dist > 0.07) {
+                if (dist > 0.1) {
                     cat.walkPhase += dt * 6.5;
                     cat.x += (dx / dist) * Math.min(dist, catSpeed * dt);
                     cat.z += (dz / dist) * Math.min(dist, catSpeed * dt);
@@ -2322,12 +2620,10 @@
                 cat.walkPhase = 0;
                 cat.pauseTimer--;
                 if (cat.pauseTimer <= 0) {
-                    // Long natural cat pause (7-12 seconds)
                     cat.pauseTimer = 380 + Math.floor(Math.random() * 340);
                     const spot = SAFE_CAT_SPOTS[Math.floor(Math.random() * SAFE_CAT_SPOTS.length)];
                     cat.pathQueue = buildDoorwayPath3D(cat.x, cat.z, spot.x, spot.z);
 
-                    // 65% chance to pop a cute random speech bubble ("Мяу, хочу есть!", etc.)
                     if (Math.random() < 0.65) {
                         const pool = CAT_RANDOM_PHRASES[cat.id];
                         cat.bubbleText = pool[Math.floor(Math.random() * pool.length)];
@@ -2337,8 +2633,8 @@
             }
 
             if (cat.group) {
-                const hopY = cat.pathQueue.length > 0 ? Math.abs(Math.sin(cat.walkPhase)) * 0.04 : 0;
-                cat.group.position.set(cat.x, 0.06 + hopY, cat.z);
+                const hopY = cat.pathQueue.length > 0 ? Math.abs(Math.sin(cat.walkPhase)) * 0.05 : 0;
+                cat.group.position.set(cat.x, 0.07 + hopY, cat.z);
                 cat.group.rotation.y = cat.rotY;
             }
         });
@@ -2348,15 +2644,15 @@
     }
 
     function update3DOverlayPinsAndBubbles() {
-        // 1. Update Floating Furniture Pins
+        // 1. Update Floating Furniture Pins (Compact & crisp in 2X apartment space!)
         Object.values(FURNITURE_DATA).forEach(item => {
             const pinEl = document.getElementById(`pin-3d-${item.id}`);
             if (!pinEl) return;
-            if (item.completed || editingSpotId) {
+            if (editingSpotId) {
                 pinEl.style.display = 'none';
                 return;
             }
-            const worldPos = new THREE.Vector3(item.pos.x, 1.35, item.pos.z);
+            const worldPos = new THREE.Vector3(item.pos.x, item.completed ? 2.1 : 1.6, item.pos.z);
             const scr = project3DToScreen(worldPos);
             if (!scr.visible) {
                 pinEl.style.display = 'none';
@@ -2372,17 +2668,17 @@
         let html = '';
 
         cats3D.forEach(cat => {
-            const scr = project3DToScreen(new THREE.Vector3(cat.x, 0.95, cat.z));
+            const scr = project3DToScreen(new THREE.Vector3(cat.x, 1.15, cat.z));
             if (scr.visible) {
                 const borderCol = cat.isRussianBlue ? 'border-cyan-400' : 'border-amber-400';
                 html += `
                     <div class="actor-bubble-3d flex flex-col items-center" style="left:${scr.x.toFixed(1)}px; top:${scr.y.toFixed(1)}px;">
                         ${cat.bubbleTimer > 0 ? `
-                            <div class="bg-white/95 text-slate-900 border-2 ${borderCol} px-2.5 py-0.5 rounded-2xl text-[10px] font-black shadow-lg mb-0.5 whitespace-nowrap">
+                            <div class="bg-white/95 text-slate-900 border-2 ${borderCol} px-2 py-0.5 rounded-xl text-[9.5px] font-black shadow-md mb-0.5 whitespace-nowrap">
                                 ${cat.bubbleText}
                             </div>
                         ` : ''}
-                        <span class="bg-slate-900/85 text-white border ${borderCol} px-2 py-0.2 rounded-full text-[9px] font-black">
+                        <span class="bg-slate-900/85 text-white border ${borderCol} px-1.5 py-0.2 rounded-full text-[8.5px] font-black">
                             🐾 ${cat.name}
                         </span>
                     </div>
@@ -2391,11 +2687,11 @@
         });
 
         if (darina3D.bubbleTimer > 0) {
-            const dScr = project3DToScreen(new THREE.Vector3(darina3D.x, 2.05, darina3D.z));
+            const dScr = project3DToScreen(new THREE.Vector3(darina3D.x, 2.55, darina3D.z));
             if (dScr.visible) {
                 html += `
                     <div class="actor-bubble-3d" style="left:${dScr.x.toFixed(1)}px; top:${dScr.y.toFixed(1)}px;">
-                        <div class="bg-pink-600/95 text-white border-2 border-amber-300 px-2.5 py-1 rounded-2xl text-[10px] font-black shadow-lg max-w-[210px] text-center leading-tight">
+                        <div class="bg-pink-600/95 text-white border border-amber-300 px-2.5 py-0.5 rounded-full text-[9.5px] font-black shadow-md whitespace-nowrap">
                             ${darina3D.bubbleText}
                         </div>
                     </div>
@@ -2412,9 +2708,11 @@
         Object.values(FURNITURE_DATA).forEach(item => {
             const btn = document.createElement('button');
             btn.id = `pin-3d-${item.id}`;
-            btn.className = 'pin-3d hs-btn-green px-2.5 py-1 rounded-full text-white font-black text-[10.5px] flex items-center gap-1 shadow-xl';
-            btn.innerHTML = `<span>⭐ ${item.cost}</span>`;
+            btn.type = 'button';
+            updateSinglePinAppearance(btn, item);
+
             btn.onclick = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onTapFurnitureZone(item.id);
             };
@@ -2422,42 +2720,24 @@
         });
     }
 
+    function updateSinglePinAppearance(btn, item) {
+        if (!btn) return;
+        const shortName = item.title.split(':')[1]?.trim().split(' ')[0] || 'Уют';
+        if (item.completed) {
+            btn.className = 'pin-3d hs-pill px-2 py-0.5 rounded-full text-amber-200 font-black text-[9px] flex items-center gap-1 shadow-md border border-amber-400/70 hover:scale-105';
+            btn.innerHTML = `<span>🎨</span><span>${shortName}</span>`;
+        } else {
+            btn.className = 'pin-3d hs-btn-green px-2 py-0.5 rounded-full text-white font-black text-[10px] flex items-center gap-1 shadow-lg';
+            btn.innerHTML = `<span>⭐${item.cost}</span><span>${shortName}</span>`;
+        }
+    }
+
     /*************************************************************************
-     * 11. FURNITURE UNLOCKING, STORY MILESTONES & UI DIALOGUES
+     * 11. FURNITURE UNLOCKING & FIXED 3-STYLE SELECTOR DOCK
      *************************************************************************/
     let editingSpotId = null;
     let previewStyle = 0;
-
-    function updateApartmentHUD() {
-        document.getElementById('hud-stars').textContent = stars;
-        document.getElementById('modal-stars-count').textContent = stars;
-        document.getElementById('hud-coins').textContent = coins;
-        document.getElementById('hud-level-num').textContent = currentLevel;
-
-        const allItems = Object.values(FURNITURE_DATA);
-        const doneCount = allItems.filter(i => i.completed).length;
-        const total = allItems.length;
-
-        document.getElementById('hud-progress-txt').textContent = `${doneCount}/${total}`;
-        document.getElementById('hud-progress-bar').style.width = `${Math.round((doneCount / total) * 100)}%`;
-
-        // Check Story Chapter Progression
-        let activeChap = 1;
-        STORY_CHAPTERS.forEach(ch => {
-            if (doneCount >= ch.reqCount) activeChap = ch.chapter;
-        });
-        document.getElementById('hud-chapter-label').textContent = `Глава ${activeChap}`;
-
-        if (activeChap > currentChapter) {
-            currentChapter = activeChap;
-            openStoryModal(currentChapter);
-        }
-
-        const rem = total - doneCount;
-        const badge = document.getElementById('tablet-badge');
-        badge.textContent = rem;
-        badge.style.display = rem === 0 ? 'none' : 'inline-block';
-    }
+    let toastHideTimeout = null;
 
     function onTapFurnitureZone(spotId) {
         const item = FURNITURE_DATA[spotId];
@@ -2465,60 +2745,93 @@
         playSound('tap');
 
         commandDarinaWalkTo3D(item.walk.x, item.walk.z);
+        // Smoothly focus and zoom closer to the selected furniture so all 3 styles are seen in detail!
         camDesiredTarget.set(item.pos.x, 0, item.pos.z);
+        camDesiredDist = Math.min(camDesiredDist, 10.5);
+        camDesiredHeight = Math.max(3.2, camDesiredDist * 0.76);
 
-        if (!item.completed && stars < item.cost) {
-            sayDarina(`«Для зоны «${item.title}» нужно ⭐ ${item.cost} (у нас сейчас ⭐ ${stars}). Пошли сыграем уровень Три в ряд!»`);
-            darina3D.bubbleText = `Нужно ещё ${item.cost - stars} ⭐!`;
-            darina3D.bubbleTimer = 180;
-            return;
-        }
         openStyleSelectorDock(spotId);
     }
 
     function openStyleSelectorDock(spotId) {
         const item = FURNITURE_DATA[spotId];
+        if (!item) return;
         editingSpotId = spotId;
-        previewStyle = item.style || 0;
+        previewStyle = typeof item.style === 'number' ? item.style : 0;
 
         document.getElementById('apt-bottom-bar').classList.add('hidden');
         const dock = document.getElementById('style-selector-dock');
         dock.classList.remove('hidden');
         dock.classList.add('flex');
-        document.getElementById('dock-item-title').textContent = item.title;
-        document.getElementById('dock-confirm-label').textContent = item.completed
-            ? '✔ Сохранить стиль'
-            : `✔ Открыть за ⭐ ${item.cost}`;
 
-        const container = document.getElementById('dock-style-cards');
-        container.innerHTML = '';
-        item.styles.forEach((st, idx) => {
-            const btn = document.createElement('button');
-            btn.className = `p-2 rounded-2xl border-2 flex items-center gap-2 transition active:scale-95 ${
-                idx === previewStyle
-                    ? 'bg-amber-400/20 border-amber-400 text-white shadow'
-                    : 'bg-slate-800/90 border-slate-700 text-slate-300'
+        renderStyleSelectorCards();
+        rebuildAllFurnitureMeshes();
+    }
+
+    // Explicit global handler for clicking Variant 1 (0), Variant 2 (1), or Variant 3 (2)
+    window.selectPreviewStyleIndex = function(idx) {
+        if (!editingSpotId) return;
+        const item = FURNITURE_DATA[editingSpotId];
+        if (!item || !item.styles[idx]) return;
+
+        playSound('tap');
+        previewStyle = idx;
+        renderStyleSelectorCards();
+        rebuildAllFurnitureMeshes();
+        sayDarina(`«Вариант ${idx + 1}: «${item.styles[idx].name}» — отлично смотрится в 3D!»`);
+    };
+
+    function renderStyleSelectorCards() {
+        const item = FURNITURE_DATA[editingSpotId];
+        if (!item) return;
+
+        document.getElementById('dock-item-title').textContent = item.title;
+        const confirmBtn = document.getElementById('btn-style-confirm');
+
+        if (item.completed) {
+            document.getElementById('dock-confirm-label').textContent = `✔ Оставить Вариант ${previewStyle + 1}`;
+            confirmBtn.className = 'hs-btn-green px-4 py-1.5 rounded-xl text-white font-black text-xs flex items-center gap-1 cursor-pointer';
+        } else if (stars >= item.cost) {
+            document.getElementById('dock-confirm-label').textContent = `✔ Открыть Вариант ${previewStyle + 1} (⭐ ${item.cost})`;
+            confirmBtn.className = 'hs-btn-green px-4 py-1.5 rounded-xl text-white font-black text-xs flex items-center gap-1 cursor-pointer';
+        } else {
+            document.getElementById('dock-confirm-label').textContent = `▶ Заработать ⭐ (${stars}/${item.cost})`;
+            confirmBtn.className = 'hs-btn-amber px-4 py-1.5 rounded-xl text-slate-950 font-black text-xs flex items-center gap-1 cursor-pointer';
+        }
+
+        // Update the 3 fixed style buttons in place without destroying DOM nodes during click!
+        for (let idx = 0; idx < 3; idx++) {
+            const btn = document.getElementById(`style-card-btn-${idx}`);
+            const st = item.styles[idx];
+            if (!btn || !st) continue;
+
+            const isSelected = idx === previewStyle;
+            btn.className = `p-2.5 rounded-2xl border-2 flex items-center gap-2 transition active:scale-95 cursor-pointer select-none ${
+                isSelected
+                    ? 'bg-amber-400/30 border-amber-300 text-white shadow-lg ring-2 ring-amber-400'
+                    : 'bg-slate-800/95 border-slate-600 text-slate-200 hover:border-amber-400/60'
             }`;
             btn.innerHTML = `
-                <span class="w-5 h-5 rounded-full border-2 border-white shrink-0" style="background:${st.color}"></span>
-                <span class="text-[11px] font-black leading-tight text-left">${st.name}</span>
+                <span class="w-6 h-6 rounded-full border-2 border-white shrink-0 shadow flex items-center justify-center text-[10px] font-black text-white" style="background:${st.color}">
+                    ${isSelected ? '✓' : idx + 1}
+                </span>
+                <div class="text-left min-w-0">
+                    <div class="text-[9px] font-extrabold uppercase ${isSelected ? 'text-amber-300' : 'text-slate-400'}">Вариант ${idx + 1}</div>
+                    <div class="text-[11px] font-black leading-tight truncate">${st.name}</div>
+                </div>
             `;
-            btn.onclick = () => {
-                playSound('tap');
-                previewStyle = idx;
-                openStyleSelectorDock(spotId);
-                rebuildAllFurnitureMeshes();
-            };
-            container.appendChild(btn);
-        });
-        rebuildAllFurnitureMeshes();
+        }
     }
 
     function confirmFurnitureEdit() {
         const item = FURNITURE_DATA[editingSpotId];
         if (!item) return;
         if (!item.completed) {
-            if (stars < item.cost) return;
+            if (stars < item.cost) {
+                cancelFurnitureEdit();
+                openMatch3Screen();
+                return;
+            }
             stars -= item.cost;
             item.completed = true;
         }
@@ -2545,48 +2858,99 @@
         rebuildAllFurnitureMeshes();
     }
 
-    function triggerRandomFamilyDialogue() {
-        playSound('meow');
-        const c = cats3D[Math.floor(Math.random() * cats3D.length)];
-        const pool = CAT_RANDOM_PHRASES[c.id];
-        c.bubbleText = pool[Math.floor(Math.random() * pool.length)];
-        c.bubbleTimer = 240;
+    function updateApartmentHUD() {
+        const totalZones = Object.keys(FURNITURE_DATA).length;
+        const doneZones = Object.values(FURNITURE_DATA).filter(i => i.completed).length;
+        const remainingZones = totalZones - doneZones;
 
-        const lines = [
-            '«Балу просит добавки корма, а Багира греется на тёплом паркете!»',
-            '«Смотри, как красиво парит Нерюнгринская ГРЭС за окном и гуляют люди в парке!»',
-            '«В нашей двушке каждая деталь подобрана с любовью и идеальным порядком!»'
-        ];
-        sayDarina(lines[Math.floor(Math.random() * lines.length)]);
+        const starsEl = document.getElementById('hud-stars');
+        if (starsEl) starsEl.textContent = stars;
+
+        const modalStarsEl = document.getElementById('modal-stars-count');
+        if (modalStarsEl) modalStarsEl.textContent = stars;
+
+        const coinsEl = document.getElementById('hud-coins');
+        if (coinsEl) coinsEl.textContent = coins;
+
+        const lvlEl = document.getElementById('hud-level-num');
+        if (lvlEl) lvlEl.textContent = currentLevel;
+
+        const badgeEl = document.getElementById('tablet-badge');
+        if (badgeEl) badgeEl.textContent = remainingZones;
+
+        const progTxt = document.getElementById('hud-progress-txt');
+        if (progTxt) progTxt.textContent = `${doneZones}/${totalZones}`;
+
+        const progBar = document.getElementById('hud-progress-bar');
+        if (progBar) progBar.style.width = `${Math.round((doneZones / totalZones) * 100)}%`;
+
+        let activeChap = 1;
+        STORY_CHAPTERS.forEach(ch => {
+            if (doneZones >= ch.reqCount) activeChap = ch.chapter;
+        });
+        currentChapter = activeChap;
+        const chapLbl = document.getElementById('hud-chapter-label');
+        if (chapLbl) chapLbl.textContent = `Глава ${activeChap}`;
+
+        Object.values(FURNITURE_DATA).forEach(item => {
+            const pinBtn = document.getElementById(`pin-3d-${item.id}`);
+            if (pinBtn) updateSinglePinAppearance(pinBtn, item);
+        });
     }
 
     function sayDarina(text) {
-        document.getElementById('hud-dialogue').textContent = text;
+        const el = document.getElementById('hud-dialogue');
+        const box = document.getElementById('darina-toast-box');
+        if (el) el.textContent = text;
+        if (box) {
+            box.classList.remove('toast-hidden');
+            if (toastHideTimeout) clearTimeout(toastHideTimeout);
+            toastHideTimeout = setTimeout(() => {
+                box.classList.add('toast-hidden');
+            }, 4200);
+        }
     }
 
-    function openStoryModal(chapNum = null) {
+    function triggerRandomFamilyDialogue() {
+        playSound('meow');
+        const quotes = [
+            '«Квартира стала в 2 раза просторнее! Нажми ➕ справа вверху, чтобы приблизить нас с котиками!»',
+            '«Нажми на любую мебель — теперь все 3 варианта дизайна переключаются мгновенно!»',
+            '«Балу и Багира чинно ходят через дверные проёмы и радуются простору!»'
+        ];
+        sayDarina(quotes[Math.floor(Math.random() * quotes.length)]);
+    }
+
+    function openStoryModal(chapNum) {
         playSound('tap');
-        const targetChap = chapNum || currentChapter;
-        const ch = STORY_CHAPTERS.find(c => c.chapter === targetChap) || STORY_CHAPTERS[0];
+        const doneCount = Object.values(FURNITURE_DATA).filter(i => i.completed).length;
+        let currentObj = STORY_CHAPTERS[0];
+        STORY_CHAPTERS.forEach(ch => {
+            if (doneCount >= ch.reqCount) currentObj = ch;
+        });
+        if (chapNum) {
+            const found = STORY_CHAPTERS.find(c => c.chapter === chapNum);
+            if (found) currentObj = found;
+        }
 
-        document.getElementById('story-modal-title').textContent = ch.title;
-        document.getElementById('story-modal-sub').textContent = `Сюжетная глава ${ch.chapter} из 5`;
-        document.getElementById('story-modal-text').textContent = ch.text;
-        document.getElementById('story-modal-cats').textContent = ch.cats;
+        document.getElementById('story-modal-title').textContent = currentObj.title;
+        document.getElementById('story-modal-sub').textContent = `Глава ${currentObj.chapter} из ${STORY_CHAPTERS.length} • Обустроено ${doneCount}/14 зон`;
+        document.getElementById('story-modal-text').textContent = currentObj.text;
+        document.getElementById('story-modal-cats').textContent = currentObj.cats;
 
-        const list = document.getElementById('story-chapters-list');
-        list.innerHTML = '';
-        STORY_CHAPTERS.forEach(sc => {
-            const unlocked = currentChapter >= sc.chapter;
-            const b = document.createElement('button');
-            b.className = `py-1.5 rounded-xl font-black text-[10px] border ${
-                sc.chapter === ch.chapter
-                    ? 'bg-pink-600 text-white border-amber-300'
-                    : (unlocked ? 'bg-slate-700 text-amber-200 border-slate-500' : 'bg-slate-900 text-slate-500 border-slate-800')
+        const listEl = document.getElementById('story-chapters-list');
+        listEl.innerHTML = '';
+        STORY_CHAPTERS.forEach(ch => {
+            const unlocked = doneCount >= ch.reqCount;
+            const btn = document.createElement('button');
+            btn.className = `p-1.5 rounded-xl border text-[10px] font-black transition ${
+                unlocked
+                    ? 'bg-pink-600/30 border-pink-400 text-white'
+                    : 'bg-slate-900 border-slate-700 text-slate-500'
             }`;
-            b.textContent = `${unlocked ? '📖' : '🔒'} Гл.${sc.chapter}`;
-            if (unlocked) b.onclick = () => openStoryModal(sc.chapter);
-            list.appendChild(b);
+            btn.textContent = unlocked ? `📖 Глава ${ch.chapter}` : `🔒 ${ch.reqCount} зон`;
+            if (unlocked) btn.onclick = () => openStoryModal(ch.chapter);
+            listEl.appendChild(btn);
         });
 
         const m = document.getElementById('modal-story');
@@ -2606,11 +2970,13 @@
         m.classList.remove('hidden');
         m.classList.add('flex');
     }
+
     function closeBtiMapModal() {
         const m = document.getElementById('modal-bti');
         m.classList.add('hidden');
         m.classList.remove('flex');
     }
+
     function jumpFromBtiModal(roomNum) {
         closeBtiMapModal();
         focusBtiRoom(roomNum);
@@ -2618,22 +2984,21 @@
 
     function openTasksModal() {
         playSound('tap');
-        document.getElementById('modal-stars-count').textContent = stars;
         const container = document.getElementById('tasks-list-container');
         container.innerHTML = '';
 
         Object.values(FURNITURE_DATA).forEach(item => {
             const card = document.createElement('div');
             card.className = `p-2.5 rounded-2xl border-2 flex items-center justify-between gap-2 ${
-                item.completed ? 'bg-emerald-50 border-emerald-300' : 'bg-white border-slate-200'
+                item.completed ? 'bg-emerald-50 border-emerald-300' : 'bg-white border-slate-200 shadow-xs'
             }`;
             card.innerHTML = `
                 <div class="min-w-0">
                     <div class="text-xs font-black text-slate-900 truncate">${item.title}</div>
-                    <p class="text-[10px] font-bold text-slate-600 leading-snug mt-0.5">${item.desc}</p>
+                    <div class="text-[10px] font-bold text-slate-500 truncate">${item.desc}</div>
                 </div>
-                <button class="${item.completed ? 'hs-btn-blue' : 'hs-btn-green'} px-3 py-1.5 rounded-xl text-white font-black text-xs shrink-0">
-                    ${item.completed ? 'Стиль ✏️' : `⭐ ${item.cost}`}
+                <button class="${item.completed ? 'hs-btn-blue' : 'hs-btn-green'} px-3 py-1.5 rounded-xl text-white font-black text-[10.5px] shrink-0">
+                    ${item.completed ? '🎨 Стиль' : `⭐ ${item.cost}`}
                 </button>
             `;
             card.querySelector('button').onclick = () => {
@@ -2655,670 +3020,503 @@
     }
 
     /*************************************************************************
-     * 12. MATCH-3 ENGINE WITH PACKING CRATES (📦) & ESCALATING DIFFICULTY
+     * 12. MATCH-3 ENGINE (7x7 BOARD, BOOSTERS, BOX OBSTACLES & CONFETTI FX)
      *************************************************************************/
-    const GRID_SIZE = 7;
+    const M3_SIZE = 7;
     const TILE_TYPES = [
-        {
-            id: 0, name: 'Вафли', color: '#f59e0b', bg: 'bg-amber-100 border-amber-300',
-            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><rect x="6" y="10" width="32" height="24" rx="7" fill="#d97706" stroke="#78350f" stroke-width="2"/><circle cx="18" cy="20" r="6.5" fill="#bef264"/><circle cx="27" cy="20" r="6.5" fill="#fed7aa"/></svg>`
-        },
-        {
-            id: 1, name: 'Татарский чай', color: '#10b981', bg: 'bg-emerald-100 border-emerald-300',
-            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><path d="M10,16 L30,16 L27,32 Q20,36 13,32 Z" fill="#10b981" stroke="#065f46" stroke-width="2"/><path d="M30,18 Q37,18 36,24 Q35,29 28,28" fill="none" stroke="#065f46" stroke-width="2.5"/><ellipse cx="20" cy="34" rx="14" ry="3.5" fill="#fbbf24"/></svg>`
-        },
-        {
-            id: 2, name: 'Подушка', color: '#f43f5e', bg: 'bg-rose-100 border-rose-300',
-            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><rect x="7" y="9" width="30" height="26" rx="9" fill="#f43f5e" stroke="#9f1239" stroke-width="2"/><circle cx="22" cy="22" r="4" fill="#fef08a"/></svg>`
-        },
-        {
-            id: 3, name: 'Лапка', color: '#38bdf8', bg: 'bg-sky-100 border-sky-300',
-            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><ellipse cx="22" cy="26" rx="8" ry="6.5" fill="#475569"/><circle cx="13" cy="17" r="3.5" fill="#475569"/><circle cx="19" cy="14" r="3.5" fill="#475569"/><circle cx="25" cy="14" r="3.5" fill="#475569"/><circle cx="31" cy="17" r="3.5" fill="#475569"/></svg>`
-        },
-        {
-            id: 4, name: 'Очки Дарины', color: '#a855f7', bg: 'bg-purple-100 border-purple-300',
-            svg: `<svg viewBox="0 0 44 44" class="w-4/5 h-4/5"><rect x="5" y="15" width="15" height="12" rx="3" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/><rect x="24" y="15" width="15" height="12" rx="3" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/><line x1="20" y1="20" x2="24" y2="20" stroke="#fbbf24" stroke-width="2.5"/></svg>`
-        }
+        { id: 'waffle', icon: '🧇', bg: 'linear-gradient(135deg, #fde68a, #f59e0b)' },
+        { id: 'tea',    icon: '☕', bg: 'linear-gradient(135deg, #a7f3d0, #10b981)' },
+        { id: 'heart',  icon: '💖', bg: 'linear-gradient(135deg, #fbcfe8, #ec4899)' },
+        { id: 'cat',    icon: '🐾', bg: 'linear-gradient(135deg, #bae6fd, #0284c7)' },
+        { id: 'flower', icon: '🌷', bg: 'linear-gradient(135deg, #ddd6fe, #7c3aed)' }
     ];
 
-    let grid = [];
-    let selectedCell = null;
+    let m3Grid = [];
+    let m3Moves = 18;
+    let m3Goals = {};
+    let m3Selected = null;
     let m3Busy = false;
-    let movesLeft = 18;
-    let levelGoals = {};
-    let activeBooster = null;
-    let m3DragStart = null;
+    let activeBoosterMode = null;
 
     function openMatch3Screen() {
         playSound('tap');
-        cancelFurnitureEdit();
         document.getElementById('screen-apartment').classList.add('hidden');
-        const s = document.getElementById('screen-match3');
-        s.classList.remove('hidden');
-        s.classList.add('flex');
-        initMatch3Level(currentLevel);
+        const s2 = document.getElementById('screen-match3');
+        s2.classList.remove('hidden');
+        s2.classList.add('flex');
+        startMatch3Level(currentLevel);
     }
 
     function closeMatch3Screen() {
         playSound('tap');
-        const s = document.getElementById('screen-match3');
-        s.classList.add('hidden');
-        s.classList.remove('flex');
+        const s2 = document.getElementById('screen-match3');
+        s2.classList.add('hidden');
+        s2.classList.remove('flex');
         document.getElementById('screen-apartment').classList.remove('hidden');
         updateApartmentHUD();
     }
 
-    function initMatch3Level(lvl) {
-        // Tighter moves & crates on board for engaging challenge
-        movesLeft = Math.max(15, 20 - Math.floor(lvl / 3));
-        activeBooster = null;
+    function startMatch3Level(lvl) {
+        m3Moves = Math.max(14, 21 - Math.floor(lvl / 3));
+        m3Goals = {
+            box: Math.min(12, 4 + lvl * 2),
+            waffle: 6 + lvl * 2,
+            tea: 6 + lvl * 2
+        };
+        m3Selected = null;
+        m3Busy = false;
+        activeBoosterMode = null;
+
         document.getElementById('m3-lvl-title').textContent = lvl;
-        document.getElementById('m3-moves').textContent = movesLeft;
         document.getElementById('cnt-hammer').textContent = boosts.hammer;
         document.getElementById('cnt-broom').textContent = boosts.broom;
 
-        const targetCount = 14 + Math.min(lvl * 2, 16);
-        const crateCount = Math.min(4 + lvl, 11);
-        levelGoals = {
-            0: { cur: 0, max: targetCount, icon: TILE_TYPES[0].svg },
-            1: { cur: 0, max: targetCount, icon: TILE_TYPES[1].svg },
-            crate: { cur: 0, max: crateCount, icon: `<span class="text-lg">📦</span>` }
-        };
-
-        generateGridWithCrates(crateCount);
-        renderM3GoalsUI();
-        renderM3Board(true);
+        m3Grid = [];
+        let placedBoxes = 0;
+        for (let r = 0; r < M3_SIZE; r++) {
+            m3Grid[r] = [];
+            for (let c = 0; c < M3_SIZE; c++) {
+                const wantBox = (r > 1 && r < 5 && c > 1 && c < 5 && placedBoxes < m3Goals.box);
+                if (wantBox) {
+                    placedBoxes++;
+                    m3Grid[r][c] = { type: 'box', special: null };
+                } else {
+                    let t;
+                    do {
+                        t = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)].id;
+                    } while (
+                        (c >= 2 && m3Grid[r][c - 1]?.type === t && m3Grid[r][c - 2]?.type === t) ||
+                        (r >= 2 && m3Grid[r - 1][c]?.type === t && m3Grid[r - 2][c]?.type === t)
+                    );
+                    m3Grid[r][c] = { type: t, special: null };
+                }
+            }
+        }
+        m3Goals.box = placedBoxes;
+        renderMatch3HUD();
+        renderMatch3Board();
     }
 
-    function renderM3GoalsUI() {
-        const container = document.getElementById('m3-goals');
-        container.innerHTML = '';
-        Object.keys(levelGoals).forEach(k => {
-            const g = levelGoals[k];
-            const rem = Math.max(0, g.max - g.cur);
-            const badge = document.createElement('div');
-            badge.className = `relative w-8 h-8 rounded-xl border-2 flex items-center justify-center shadow ${
-                rem === 0 ? 'bg-emerald-500 border-white' : 'bg-slate-800 border-amber-200'
-            }`;
-            badge.innerHTML = `
-                ${g.icon}
-                <span class="absolute -bottom-1 -right-1 px-1 rounded-full text-[9px] font-black border border-white ${
-                    rem === 0 ? 'bg-emerald-700 text-white' : 'bg-rose-600 text-white'
-                }">${rem === 0 ? '✓' : rem}</span>
+    function renderMatch3HUD() {
+        document.getElementById('m3-moves').textContent = m3Moves;
+        const gEl = document.getElementById('m3-goals');
+        gEl.innerHTML = '';
+        const icons = { box: '📦', waffle: '🧇', tea: '☕' };
+        Object.keys(m3Goals).forEach(k => {
+            const rem = Math.max(0, m3Goals[k]);
+            gEl.innerHTML += `
+                <div class="bg-slate-900/90 text-white px-2 py-0.5 rounded-xl flex items-center gap-1 text-xs font-black border border-amber-300/40">
+                    <span>${icons[k]}</span>
+                    <span>${rem === 0 ? '✓' : rem}</span>
+                </div>
             `;
-            container.appendChild(badge);
         });
     }
 
-    function generateGridWithCrates(crateCount) {
-        grid = [];
-        for (let r = 0; r < GRID_SIZE; r++) {
-            grid[r] = [];
-            for (let c = 0; c < GRID_SIZE; c++) {
-                let t;
-                do {
-                    t = Math.floor(Math.random() * TILE_TYPES.length);
-                } while (
-                    (c >= 2 && grid[r][c - 1].type === t && grid[r][c - 2].type === t) ||
-                    (r >= 2 && grid[r - 1][c].type === t && grid[r - 2][c].type === t)
-                );
-                grid[r][c] = { type: t, power: null, crate: false, isNew: false };
-            }
-        }
-
-        // Place unpacking crates 📦 on the board
-        let placed = 0;
-        while (placed < crateCount) {
-            const rr = 1 + Math.floor(Math.random() * (GRID_SIZE - 2));
-            const cc = 1 + Math.floor(Math.random() * (GRID_SIZE - 2));
-            if (!grid[rr][cc].crate) {
-                grid[rr][cc].crate = true;
-                placed++;
-            }
-        }
-    }
-
-    function renderM3Board(animateDrop = false) {
+    function renderMatch3Board() {
         const board = document.getElementById('match3-grid');
         board.innerHTML = '';
-        for (let r = 0; r < GRID_SIZE; r++) {
-            for (let c = 0; c < GRID_SIZE; c++) {
-                const cell = grid[r][c];
-                const meta = TILE_TYPES[cell.type];
-                const el = document.createElement('div');
-                el.id = `cell-${r}-${c}`;
-
-                if (cell.crate) {
-                    el.className = `m3-tile border-b-2 bg-amber-700 border-amber-900`;
-                    el.innerHTML = `<span class="text-lg">📦</span>`;
+        for (let r = 0; r < M3_SIZE; r++) {
+            for (let c = 0; c < M3_SIZE; c++) {
+                const cell = m3Grid[r][c];
+                const div = document.createElement('div');
+                div.className = 'm3-tile text-lg sm:text-xl select-none';
+                if (m3Selected && m3Selected.r === r && m3Selected.c === c) {
+                    div.classList.add('selected');
+                }
+                if (!cell) {
+                    div.style.background = 'transparent';
+                } else if (cell.type === 'box') {
+                    div.style.background = 'linear-gradient(135deg, #d97706, #92400e)';
+                    div.textContent = '📦';
                 } else {
-                    el.className = `m3-tile border-b-2 ${meta.bg} ${(animateDrop || cell.isNew) ? 'tile-drop' : ''}`;
-                    el.innerHTML = meta.svg;
+                    const info = TILE_TYPES.find(t => t.id === cell.type) || TILE_TYPES[0];
+                    div.style.background = info.bg;
+                    div.textContent = cell.special === 'bomb' ? '💣' : (cell.special === 'rocket' ? '🚀' : (cell.special === 'plane' ? '✈️' : info.icon));
                 }
-                cell.isNew = false;
-
-                if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
-                    el.classList.add('selected');
-                }
-
-                if (cell.power && !cell.crate) {
-                    const p = document.createElement('div');
-                    p.className = 'absolute inset-0 rounded-lg bg-amber-400/95 border-2 border-white flex items-center justify-center text-base shadow';
-                    p.textContent = cell.power === 'plane' ? '✈️' : (cell.power === 'rocket' ? '🚀' : '💣');
-                    el.appendChild(p);
-                }
-
-                el.addEventListener('pointerdown', (e) => onCellPointerDown(e, r, c));
-                board.appendChild(el);
+                div.onclick = () => onTapM3Tile(r, c);
+                board.appendChild(div);
             }
         }
     }
 
-    function getCellCenterOnCanvas(r, c) {
-        const el = document.getElementById(`cell-${r}-${c}`);
-        if (!el) return { x: fxCanvas.width / 2, y: fxCanvas.height / 2 };
-        const rect = el.getBoundingClientRect();
-        const lp = getLogicalPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        return { x: lp.x, y: lp.y };
-    }
-
-    function onCellPointerDown(e, r, c) {
+    function onTapM3Tile(r, c) {
         if (m3Busy) return;
-        if (activeBooster) {
-            useBoosterOnCell(r, c);
-            return;
-        }
-        if (grid[r][c].crate) return;
-        const lp = getLogicalPoint(e.clientX, e.clientY);
-        m3DragStart = { r, c, x: lp.x, y: lp.y };
-    }
+        const cell = m3Grid[r][c];
+        if (!cell) return;
 
-    window.addEventListener('pointermove', (e) => {
-        if (!m3DragStart || m3Busy) return;
-        const lp = getLogicalPoint(e.clientX, e.clientY);
-        const dx = lp.x - m3DragStart.x;
-        const dy = lp.y - m3DragStart.y;
-        if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
-            const { r, c } = m3DragStart;
-            m3DragStart = null;
-            let nr = r, nc = c;
-            if (Math.abs(dx) > Math.abs(dy)) nc += dx > 0 ? 1 : -1;
-            else nr += dy > 0 ? 1 : -1;
-            if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && !grid[nr][nc].crate) {
-                selectedCell = null;
-                attemptSwap(r, c, nr, nc);
-            }
-        }
-    });
-
-    window.addEventListener('pointerup', () => {
-        if (!m3DragStart || m3Busy) return;
-        const { r, c } = m3DragStart;
-        m3DragStart = null;
-        onCellTap(r, c);
-    });
-
-    function onCellTap(r, c) {
-        if (grid[r][c].crate) return;
-        if (grid[r][c].power && (!selectedCell || (selectedCell.r === r && selectedCell.c === c))) {
-            triggerPowerTile(r, c);
-            return;
-        }
-        if (!selectedCell) {
-            selectedCell = { r, c };
-            playSound('tap');
-            renderM3Board();
-            return;
-        }
-        if (selectedCell.r === r && selectedCell.c === c) {
-            selectedCell = null;
-            renderM3Board();
-            return;
-        }
-        if (Math.abs(selectedCell.r - r) + Math.abs(selectedCell.c - c) === 1) {
-            const sr = selectedCell.r, sc = selectedCell.c;
-            selectedCell = null;
-            attemptSwap(sr, sc, r, c);
-        } else {
-            selectedCell = { r, c };
-            playSound('tap');
-            renderM3Board();
-        }
-    }
-
-    async function attemptSwap(r1, c1, r2, c2) {
-        if (grid[r1][c1].crate || grid[r2][c2].crate) return;
-        m3Busy = true;
-        playSound('tap');
-
-        const tmp = grid[r1][c1];
-        grid[r1][c1] = grid[r2][c2];
-        grid[r2][c2] = tmp;
-        renderM3Board();
-        await delay(140);
-
-        const hasPower = grid[r1][c1].power || grid[r2][c2].power;
-        const res = scanMatches();
-
-        if (res.matched.size === 0 && !hasPower) {
-            const rev = grid[r1][c1];
-            grid[r1][c1] = grid[r2][c2];
-            grid[r2][c2] = rev;
-            renderM3Board();
-            m3Busy = false;
-            return;
-        }
-
-        movesLeft = Math.max(0, movesLeft - 1);
-        document.getElementById('m3-moves').textContent = movesLeft;
-
-        if (grid[r1][c1].power) expandPowerBlast(r1, c1, res.matched);
-        if (grid[r2][c2].power) expandPowerBlast(r2, c2, res.matched);
-
-        await resolveCascades(res);
-        checkLevelComplete();
-        m3Busy = false;
-    }
-
-    async function triggerPowerTile(r, c) {
-        m3Busy = true;
-        movesLeft = Math.max(0, movesLeft - 1);
-        document.getElementById('m3-moves').textContent = movesLeft;
-        const matched = new Set();
-        expandPowerBlast(r, c, matched);
-        await resolveCascades({ matched, spawns: [] });
-        checkLevelComplete();
-        m3Busy = false;
-    }
-
-    function expandPowerBlast(r, c, matchedSet) {
-        const p = grid[r][c]?.power;
-        if (!p) return;
-        grid[r][c].power = null;
-        const pt = getCellCenterOnCanvas(r, c);
-
-        if (p === 'plane') {
-            playSound('rocket');
-            spawnShockwave(pt.x, pt.y, '#38bdf8');
-            matchedSet.add(`${r},${c}`);
-            [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
-                if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) matchedSet.add(`${nr},${nc}`);
-            });
-            for (let k = 0; k < 3; k++) {
-                const rr = Math.floor(Math.random() * GRID_SIZE);
-                const cc = Math.floor(Math.random() * GRID_SIZE);
-                const dest = getCellCenterOnCanvas(rr, cc);
-                spawnLaserBeam(pt.x, pt.y, dest.x, dest.y, '#fde047');
-                matchedSet.add(`${rr},${cc}`);
-            }
-        } else if (p === 'rocket') {
-            playSound('rocket');
-            spawnLaserBeam(0, pt.y, fxCanvas.width, pt.y, '#38bdf8');
-            spawnLaserBeam(pt.x, 0, pt.x, fxCanvas.height, '#38bdf8');
-            for (let i = 0; i < GRID_SIZE; i++) {
-                matchedSet.add(`${r},${i}`);
-                matchedSet.add(`${i},${c}`);
-            }
-        } else if (p === 'bomb') {
+        if (activeBoosterMode === 'hammer') {
+            activeBoosterMode = null;
+            boosts.hammer = Math.max(0, boosts.hammer - 1);
+            document.getElementById('cnt-hammer').textContent = boosts.hammer;
             playSound('bomb');
-            spawnShockwave(pt.x, pt.y, '#f43f5e');
-            spawnConfetti(pt.x, pt.y, 30);
-            for (let dr = -2; dr <= 2; dr++) {
-                for (let dc = -2; dc <= 2; dc++) {
-                    const nr = r + dr, nc = c + dc;
-                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
-                        matchedSet.add(`${nr},${nc}`);
+            damageCellAt(r, c);
+            collapseAndRefillBoard();
+            return;
+        }
+
+        if (cell.type === 'box') return;
+
+        if (cell.special) {
+            m3Moves = Math.max(0, m3Moves - 1);
+            triggerSpecialAt(r, c, cell.special);
+            collapseAndRefillBoard();
+            return;
+        }
+
+        if (!m3Selected) {
+            playSound('tap');
+            m3Selected = { r, c };
+            renderMatch3Board();
+            return;
+        }
+
+        const dist = Math.abs(m3Selected.r - r) + Math.abs(m3Selected.c - c);
+        if (dist === 1) {
+            swapAndCheck(m3Selected.r, m3Selected.c, r, c);
+            m3Selected = null;
+        } else {
+            playSound('tap');
+            m3Selected = { r, c };
+            renderMatch3Board();
+        }
+    }
+
+    function swapAndCheck(r1, c1, r2, c2) {
+        m3Busy = true;
+        const tmp = m3Grid[r1][c1];
+        m3Grid[r1][c1] = m3Grid[r2][c2];
+        m3Grid[r2][c2] = tmp;
+        renderMatch3Board();
+
+        const matches = findBoardMatches();
+        if (matches.length === 0) {
+            setTimeout(() => {
+                const t2 = m3Grid[r1][c1];
+                m3Grid[r1][c1] = m3Grid[r2][c2];
+                m3Grid[r2][c2] = t2;
+                m3Busy = false;
+                renderMatch3Board();
+            }, 180);
+            return;
+        }
+
+        m3Moves = Math.max(0, m3Moves - 1);
+        resolveMatches(matches);
+    }
+
+    function findBoardMatches() {
+        const matchedSet = new Set();
+        // Horizontal & Vertical lines of 3+
+        for (let r = 0; r < M3_SIZE; r++) {
+            for (let c = 0; c < M3_SIZE - 2; c++) {
+                const t = m3Grid[r][c]?.type;
+                if (t && t !== 'box' && m3Grid[r][c + 1]?.type === t && m3Grid[r][c + 2]?.type === t) {
+                    matchedSet.add(`${r},${c}`);
+                    matchedSet.add(`${r},${c + 1}`);
+                    matchedSet.add(`${r},${c + 2}`);
+                }
+            }
+        }
+        for (let c = 0; c < M3_SIZE; c++) {
+            for (let r = 0; r < M3_SIZE - 2; r++) {
+                const t = m3Grid[r][c]?.type;
+                if (t && t !== 'box' && m3Grid[r + 1][c]?.type === t && m3Grid[r + 2][c]?.type === t) {
+                    matchedSet.add(`${r},${c}`);
+                    matchedSet.add(`${r + 1},${c}`);
+                    matchedSet.add(`${r + 2},${c}`);
+                }
+            }
+        }
+        // 2x2 Homescapes Paper Plane Square
+        for (let r = 0; r < M3_SIZE - 1; r++) {
+            for (let c = 0; c < M3_SIZE - 1; c++) {
+                const t = m3Grid[r][c]?.type;
+                if (t && t !== 'box' &&
+                    m3Grid[r + 1][c]?.type === t &&
+                    m3Grid[r][c + 1]?.type === t &&
+                    m3Grid[r + 1][c + 1]?.type === t) {
+                    matchedSet.add(`${r},${c}`);
+                    matchedSet.add(`${r + 1},${c}`);
+                    matchedSet.add(`${r},${c + 1}`);
+                    matchedSet.add(`${r + 1},${c + 1}`);
+                }
+            }
+        }
+        return Array.from(matchedSet).map(s => {
+            const [r, c] = s.split(',').map(Number);
+            return { r, c };
+        });
+    }
+
+    function damageCellAt(r, c) {
+        if (r < 0 || r >= M3_SIZE || c < 0 || c >= M3_SIZE) return;
+        const cell = m3Grid[r][c];
+        if (!cell) return;
+        if (cell.type === 'box') {
+            m3Goals.box = Math.max(0, m3Goals.box - 1);
+            m3Grid[r][c] = null;
+        } else {
+            if (m3Goals[cell.type] !== undefined) {
+                m3Goals[cell.type] = Math.max(0, m3Goals[cell.type] - 1);
+            }
+            m3Grid[r][c] = null;
+        }
+    }
+
+    function triggerSpecialAt(r, c, spec) {
+        playSound(spec === 'bomb' ? 'bomb' : 'rocket');
+        m3Grid[r][c] = null;
+        if (spec === 'bomb') {
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) damageCellAt(r + dr, c + dc);
+            }
+        } else if (spec === 'rocket') {
+            for (let i = 0; i < M3_SIZE; i++) {
+                damageCellAt(r, i);
+                damageCellAt(i, c);
+            }
+        } else {
+            damageCellAt(r - 1, c);
+            damageCellAt(r + 1, c);
+            damageCellAt(r, c - 1);
+            damageCellAt(r, c + 1);
+            for (let br = 0; br < M3_SIZE; br++) {
+                for (let bc = 0; bc < M3_SIZE; bc++) {
+                    if (m3Grid[br][bc]?.type === 'box') {
+                        damageCellAt(br, bc);
+                        return;
                     }
                 }
             }
         }
     }
 
-    function scanMatches() {
-        const matched = new Set();
-        const spawns = [];
+    function resolveMatches(matches) {
+        playSound('match');
+        const spawnBonus = matches.length >= 5 ? 'bomb' : (matches.length === 4 ? 'plane' : null);
+        const pivot = matches[0];
 
-        // 2x2 Square -> Paper Plane ✈️
-        for (let r = 0; r < GRID_SIZE - 1; r++) {
-            for (let c = 0; c < GRID_SIZE - 1; c++) {
-                if (grid[r][c].crate || grid[r][c+1].crate || grid[r+1][c].crate || grid[r+1][c+1].crate) continue;
-                const t = grid[r][c].type;
-                if (
-                    grid[r][c + 1].type === t &&
-                    grid[r + 1][c].type === t &&
-                    grid[r + 1][c + 1].type === t
-                ) {
-                    matched.add(`${r},${c}`);
-                    matched.add(`${r},${c + 1}`);
-                    matched.add(`${r + 1},${c}`);
-                    matched.add(`${r + 1},${c + 1}`);
-                    spawns.push({ r, c, type: t, power: 'plane' });
+        matches.forEach(({ r, c }) => {
+            // Damage adjacent moving boxes
+            [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([nr, nc]) => {
+                if (nr >= 0 && nr < M3_SIZE && nc >= 0 && nc < M3_SIZE && m3Grid[nr][nc]?.type === 'box') {
+                    damageCellAt(nr, nc);
                 }
-            }
+            });
+            damageCellAt(r, c);
+        });
+
+        if (spawnBonus && pivot) {
+            m3Grid[pivot.r][pivot.c] = { type: 'waffle', special: spawnBonus };
         }
 
-        // Horizontal
-        for (let r = 0; r < GRID_SIZE; r++) {
-            let run = 1;
-            for (let c = 1; c <= GRID_SIZE; c++) {
-                const same = c < GRID_SIZE && !grid[r][c].crate && !grid[r][c - 1].crate && grid[r][c].type === grid[r][c - 1].type;
-                if (same) {
-                    run++;
-                } else {
-                    if (run >= 3 && !grid[r][c - 1].crate) {
-                        for (let k = c - run; k < c; k++) matched.add(`${r},${k}`);
-                        if (run === 4) spawns.push({ r, c: c - 2, type: grid[r][c - 1].type, power: 'rocket' });
-                        else if (run >= 5) spawns.push({ r, c: c - 3, type: grid[r][c - 1].type, power: 'bomb' });
-                    }
-                    run = 1;
-                }
-            }
-        }
-
-        // Vertical
-        for (let c = 0; c < GRID_SIZE; c++) {
-            let run = 1;
-            for (let r = 1; r <= GRID_SIZE; r++) {
-                const same = r < GRID_SIZE && !grid[r][c].crate && !grid[r - 1][c].crate && grid[r][c].type === grid[r - 1][c].type;
-                if (same) {
-                    run++;
-                } else {
-                    if (run >= 3 && !grid[r - 1][c].crate) {
-                        for (let k = r - run; k < r; k++) matched.add(`${k},${c}`);
-                        if (run === 4) spawns.push({ r: r - 2, c, type: grid[r - 1][c].type, power: 'rocket' });
-                        else if (run >= 5) spawns.push({ r: r - 3, c, type: grid[r - 1][c].type, power: 'bomb' });
-                    }
-                    run = 1;
-                }
-            }
-        }
-
-        return { matched, spawns };
+        collapseAndRefillBoard();
     }
 
-    async function resolveCascades(initial) {
-        let cur = initial;
-        while (cur.matched.size > 0) {
-            playSound('match');
-
-            for (const key of Array.from(cur.matched)) {
-                const [r, c] = key.split(',').map(Number);
-                if (grid[r][c] && grid[r][c].power) {
-                    expandPowerBlast(r, c, cur.matched);
+    function collapseAndRefillBoard() {
+        for (let c = 0; c < M3_SIZE; c++) {
+            let writeRow = M3_SIZE - 1;
+            for (let r = M3_SIZE - 1; r >= 0; r--) {
+                if (m3Grid[r][c] !== null) {
+                    m3Grid[writeRow][c] = m3Grid[r][c];
+                    if (writeRow !== r) m3Grid[r][c] = null;
+                    writeRow--;
                 }
             }
-
-            const coords = Array.from(cur.matched).map(s => s.split(',').map(Number));
-
-            // Break adjacent crates 📦 when tiles match next to them!
-            coords.forEach(([r, c]) => {
-                [[r-1,c],[r+1,c],[r,c-1],[r,c+1],[r,c]].forEach(([nr, nc]) => {
-                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE && grid[nr][nc]?.crate) {
-                        grid[nr][nc].crate = false;
-                        if (levelGoals.crate) {
-                            levelGoals.crate.cur = Math.min(levelGoals.crate.max, levelGoals.crate.cur + 1);
-                        }
-                        const pt = getCellCenterOnCanvas(nr, nc);
-                        spawnConfetti(pt.x, pt.y, 10, '#d97706');
-                    }
-                });
-            });
-
-            coords.forEach(([r, c]) => {
-                const cell = grid[r][c];
-                if (cell) {
-                    if (levelGoals[cell.type]) {
-                        levelGoals[cell.type].cur = Math.min(levelGoals[cell.type].max, levelGoals[cell.type].cur + 1);
-                    }
-                    const pt = getCellCenterOnCanvas(r, c);
-                    spawnConfetti(pt.x, pt.y, 6, TILE_TYPES[cell.type].color);
-                }
-                const el = document.getElementById(`cell-${r}-${c}`);
-                if (el) el.classList.add('matched');
-            });
-
-            renderM3GoalsUI();
-            await delay(180);
-
-            coords.forEach(([r, c]) => { grid[r][c] = null; });
-            cur.spawns.forEach(sp => {
-                grid[sp.r][sp.c] = { type: sp.type, power: sp.power, crate: false, isNew: true };
-            });
-
-            for (let c = 0; c < GRID_SIZE; c++) {
-                let wr = GRID_SIZE - 1;
-                for (let r = GRID_SIZE - 1; r >= 0; r--) {
-                    if (grid[r][c] !== null) {
-                        grid[wr][c] = grid[r][c];
-                        if (wr !== r) {
-                            grid[wr][c].isNew = true;
-                            grid[r][c] = null;
-                        }
-                        wr--;
-                    }
-                }
-                for (let r = wr; r >= 0; r--) {
-                    grid[r][c] = {
-                        type: Math.floor(Math.random() * TILE_TYPES.length),
-                        power: null,
-                        crate: false,
-                        isNew: true
-                    };
-                }
+            for (let r = writeRow; r >= 0; r--) {
+                const randType = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)].id;
+                m3Grid[r][c] = { type: randType, special: null };
             }
+        }
 
-            renderM3Board();
-            await delay(180);
-            cur = scanMatches();
+        renderMatch3HUD();
+        renderMatch3Board();
+
+        setTimeout(() => {
+            const chain = findBoardMatches();
+            if (chain.length > 0) {
+                resolveMatches(chain);
+            } else {
+                m3Busy = false;
+                checkMatch3EndCondition();
+            }
+        }, 220);
+    }
+
+    function checkMatch3EndCondition() {
+        const allDone = Object.values(m3Goals).every(v => v <= 0);
+        if (allDone) {
+            playSound('fanfare');
+            stars += 1;
+            const bonusCoins = 100 + m3Moves * 5;
+            coins += bonusCoins;
+            currentLevel += 1;
+            saveGameProgress(false);
+
+            document.getElementById('victory-coins').textContent = `+${bonusCoins} Монет`;
+            const m = document.getElementById('modal-victory');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            spawnConfetti(fxCanvas.width / 2, fxCanvas.height / 2, 55);
+        } else if (m3Moves <= 0) {
+            m3Moves = 5;
+            renderMatch3HUD();
+            document.getElementById('m3-comment').textContent = '«Дарина добавила +5 бонусных ходов, чтобы закончить уборку!»';
         }
     }
 
     function activateM3Booster(type) {
-        if (m3Busy) return;
-        playSound('tap');
-        if (boosts[type] <= 0) return;
-        activeBooster = activeBooster === type ? null : type;
-        document.getElementById('m3-comment').textContent = activeBooster
-            ? '«Нажми на любую клетку или коробку 📦 для удара бустером!»'
-            : '«Разбивай коробки переезда 📦 рядом с фишками! Квадрат 2x2 даёт Самолётик ✈️!»';
+        if (type === 'hammer') {
+            if (boosts.hammer <= 0) return;
+            activeBoosterMode = 'hammer';
+            document.getElementById('m3-comment').textContent = '«Выбери любую коробку 📦 или фишку, чтобы разбить её Молотком!»';
+        } else if (type === 'broom') {
+            if (boosts.broom <= 0) return;
+            boosts.broom--;
+            document.getElementById('cnt-broom').textContent = boosts.broom;
+            playSound('rocket');
+            for (let i = 0; i < M3_SIZE; i++) {
+                damageCellAt(3, i);
+                damageCellAt(i, 3);
+            }
+            collapseAndRefillBoard();
+        }
     }
 
     function buyExtraMovesWithCoins() {
-        if (coins < 100) {
-            document.getElementById('m3-comment').textContent = '«Нужно 100 монет 🪙 для +5 ходов!»';
-            return;
-        }
+        if (coins < 100) return;
         coins -= 100;
-        movesLeft += 5;
+        m3Moves += 5;
         playSound('fanfare');
-        document.getElementById('m3-moves').textContent = movesLeft;
-        saveGameProgress(false);
-    }
-
-    async function useBoosterOnCell(r, c) {
-        const mode = activeBooster;
-        activeBooster = null;
-        boosts[mode]--;
-        document.getElementById(`cnt-${mode}`).textContent = boosts[mode];
-
-        m3Busy = true;
-        const matched = new Set();
-        const pt = getCellCenterOnCanvas(r, c);
-        if (mode === 'hammer') {
-            playSound('bomb');
-            spawnShockwave(pt.x, pt.y, '#fbbf24');
-            if (grid[r][c].crate) {
-                grid[r][c].crate = false;
-                if (levelGoals.crate) levelGoals.crate.cur = Math.min(levelGoals.crate.max, levelGoals.crate.cur + 1);
-            }
-            matched.add(`${r},${c}`);
-        } else if (mode === 'broom') {
-            playSound('rocket');
-            spawnLaserBeam(0, pt.y, fxCanvas.width, pt.y, '#f472b6');
-            spawnLaserBeam(pt.x, 0, pt.x, fxCanvas.height, '#f472b6');
-            for (let i = 0; i < GRID_SIZE; i++) {
-                matched.add(`${r},${i}`);
-                matched.add(`${i},${c}`);
-            }
-        }
-        await resolveCascades({ matched, spawns: [] });
-        checkLevelComplete();
-        m3Busy = false;
-    }
-
-    function checkLevelComplete() {
-        const won = Object.values(levelGoals).every(g => g.cur >= g.max);
-        if (won) {
-            const reward = 120 + movesLeft * 8;
-            stars += 1;
-            coins += reward;
-            currentLevel += 1;
-            saveGameProgress(false);
-            playSound('fanfare');
-            spawnConfetti(fxCanvas.width / 2, fxCanvas.height / 2, 55);
-
-            document.getElementById('victory-coins').textContent = `+${reward} Монет`;
-            const m = document.getElementById('modal-victory');
-            m.classList.remove('hidden');
-            m.classList.add('flex');
-        } else if (movesLeft <= 0) {
-            if (coins >= 100) {
-                coins -= 100;
-                movesLeft = 5;
-                document.getElementById('m3-moves').textContent = movesLeft;
-                document.getElementById('m3-comment').textContent = '«Дарина добавила +5 дополнительных ходов за 100 🪙, чтобы закончить уборку!»';
-            } else {
-                initMatch3Level(currentLevel);
-                document.getElementById('m3-comment').textContent = '«Ходы закончились — пробуем уровень заново!»';
-            }
-        }
+        renderMatch3HUD();
+        updateApartmentHUD();
     }
 
     function returnToApartmentAfterWin() {
-        const m = document.getElementById('modal-victory');
-        m.classList.add('hidden');
-        m.classList.remove('flex');
+        document.getElementById('modal-victory').classList.add('hidden');
+        document.getElementById('modal-victory').classList.remove('flex');
         closeMatch3Screen();
-        sayDarina(`«Ура! Теперь у нас ⭐ ${stars}! Копим звёзды или сразу открываем новую мебель в 3D-двушке!»`);
     }
 
     function nextMatch3LevelAfterWin() {
-        const m = document.getElementById('modal-victory');
-        m.classList.add('hidden');
-        m.classList.remove('flex');
-        initMatch3Level(currentLevel);
+        document.getElementById('modal-victory').classList.add('hidden');
+        document.getElementById('modal-victory').classList.remove('flex');
+        startMatch3Level(currentLevel);
     }
 
     /*************************************************************************
-     * 13. PARTICLE BURSTS, SHOCKWAVES & WINDOW RESIZE
+     * 13. CONFETTI FX OVERLAY & INITIALIZATION
      *************************************************************************/
     const fxCanvas = document.getElementById('fx-canvas');
     const fxCtx = fxCanvas.getContext('2d');
-    let particles = [];
-    let shockwaves = [];
-    let lasers = [];
+    const particles = [];
 
-    function handleResize() {
-        const lp = getLogicalPoint(0, 0);
-        fxCanvas.width = lp.w;
-        fxCanvas.height = lp.h;
+    function resizeAllCanvases() {
+        const vp = getLogicalViewport();
+        lastViewportW = vp.w;
+        lastViewportH = vp.h;
+
+        fxCanvas.width = vp.w;
+        fxCanvas.height = vp.h;
+
+        const shell = document.getElementById('app-shell');
+        if (shell) {
+            shell.style.width = vp.w + 'px';
+            shell.style.height = vp.h + 'px';
+        }
+
         if (renderer && camera) {
-            camera.aspect = lp.w / lp.h;
+            camera.aspect = vp.w / vp.h;
             camera.updateProjectionMatrix();
-            renderer.setSize(lp.w, lp.h);
+            renderer.setSize(vp.w, vp.h, false);
+            renderer.domElement.style.width = vp.w + 'px';
+            renderer.domElement.style.height = vp.h + 'px';
+            if (scene) renderer.render(scene, camera);
         }
     }
-    window.addEventListener('resize', handleResize);
 
-    function spawnConfetti(x, y, count = 20, forcedColor = null) {
-        const cols = ['#fbbf24', '#f43f5e', '#34d399', '#38bdf8', '#a855f7'];
+    function spawnConfetti(x, y, count = 35) {
+        const cols = ['#fbbf24', '#34d399', '#f472b6', '#60a5fa', '#a78bfa'];
         for (let i = 0; i < count; i++) {
-            const a = Math.random() * Math.PI * 2;
-            const s = 2 + Math.random() * 5.5;
             particles.push({
                 x, y,
-                vx: Math.cos(a) * s,
-                vy: Math.sin(a) * s - 2,
-                r: 3 + Math.random() * 4,
-                color: forcedColor || cols[Math.floor(Math.random() * cols.length)],
-                life: 1
+                vx: (Math.random() - 0.5) * 9,
+                vy: (Math.random() - 0.8) * 9,
+                size: 5 + Math.random() * 5,
+                col: cols[Math.floor(Math.random() * cols.length)],
+                life: 45 + Math.random() * 25
             });
         }
     }
 
-    function spawnShockwave(x, y, color = '#fbbf24') {
-        shockwaves.push({ x, y, r: 8, maxR: 135, color, life: 1 });
-    }
-
-    function spawnLaserBeam(x1, y1, x2, y2, color = '#38bdf8') {
-        lasers.push({ x1, y1, x2, y2, color, life: 1 });
-    }
-
-    function renderFxLoop() {
+    function updateParticlesLoop() {
+        requestAnimationFrame(updateParticlesLoop);
         fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-
-        for (let i = shockwaves.length - 1; i >= 0; i--) {
-            const sw = shockwaves[i];
-            sw.r += (sw.maxR - sw.r) * 0.22;
-            sw.life -= 0.06;
-            if (sw.life <= 0) { shockwaves.splice(i, 1); continue; }
-            fxCtx.save();
-            fxCtx.globalAlpha = sw.life;
-            fxCtx.strokeStyle = sw.color;
-            fxCtx.lineWidth = 5 * sw.life;
-            fxCtx.beginPath();
-            fxCtx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
-            fxCtx.stroke();
-            fxCtx.restore();
-        }
-
-        for (let i = lasers.length - 1; i >= 0; i--) {
-            const ls = lasers[i];
-            ls.life -= 0.08;
-            if (ls.life <= 0) { lasers.splice(i, 1); continue; }
-            fxCtx.save();
-            fxCtx.globalAlpha = ls.life;
-            fxCtx.strokeStyle = ls.color;
-            fxCtx.lineWidth = 10 * ls.life;
-            fxCtx.lineCap = 'round';
-            fxCtx.beginPath();
-            fxCtx.moveTo(ls.x1, ls.y1);
-            fxCtx.lineTo(ls.x2, ls.y2);
-            fxCtx.stroke();
-            fxCtx.restore();
-        }
-
         for (let i = particles.length - 1; i >= 0; i--) {
             const p = particles[i];
             p.x += p.vx;
             p.y += p.vy;
-            p.vy += 0.16;
-            p.life -= 0.028;
-            if (p.life <= 0) { particles.splice(i, 1); continue; }
-            fxCtx.globalAlpha = p.life;
-            fxCtx.fillStyle = p.color;
-            fxCtx.beginPath();
-            fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            fxCtx.fill();
+            p.vy += 0.22;
+            p.life--;
+            fxCtx.fillStyle = p.col;
+            fxCtx.fillRect(p.x, p.y, p.size, p.size);
+            if (p.life <= 0) particles.splice(i, 1);
         }
-        fxCtx.globalAlpha = 1;
-        requestAnimationFrame(renderFxLoop);
     }
 
-    function delay(ms) {
-        return new Promise(res => setTimeout(res, ms));
-    }
+    window.addEventListener('resize', resizeAllCanvases);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(resizeAllCanvases, 120);
+        setTimeout(resizeAllCanvases, 380);
+    });
 
-    window.onload = () => {
-        loadSavedProgressOnStartup();
-        handleResize();
-        createInitialPinDOMElements();
+    function bootGame3D() {
+        resizeAllCanvases();
         initThreeJSWorld();
+        createInitialPinDOMElements();
+        loadSavedProgressOnStartup();
         updateApartmentHUD();
-        saveGameProgress(false);
         requestAnimationFrame(animateThreeJSWorld);
-        requestAnimationFrame(renderFxLoop);
-    };
+        requestAnimationFrame(updateParticlesLoop);
+
+        // Re-verify mobile canvas dimensions after portrait->landscape CSS transform settles
+        setTimeout(resizeAllCanvases, 120);
+        setTimeout(resizeAllCanvases, 400);
+        setInterval(() => {
+            const vp = getLogicalViewport();
+            if (Math.abs(vp.w - lastViewportW) > 2 || Math.abs(vp.h - lastViewportH) > 2) {
+                resizeAllCanvases();
+            }
+        }, 500);
+
+        // Auto-hide initial toast after 3.5s so the screen stays 100% unobstructed
+        setTimeout(() => {
+            const box = document.getElementById('darina-toast-box');
+            if (box) box.classList.add('toast-hidden');
+        }, 3500);
+    }
+
+    function loadThreeWithFallbacks(cdnList, index = 0) {
+        if (typeof THREE !== 'undefined') {
+            bootGame3D();
+            return;
+        }
+        if (index >= cdnList.length) return;
+        const s = document.createElement('script');
+        s.src = cdnList[index];
+        s.onload = () => bootGame3D();
+        s.onerror = () => loadThreeWithFallbacks(cdnList, index + 1);
+        document.head.appendChild(s);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadThreeWithFallbacks([
+            'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+            'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+            'https://unpkg.com/three@0.128.0/build/three.min.js'
+        ]);
+    });
 </script>
 </body>
 </html>
